@@ -1,0 +1,2027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0A0C10" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Adaptive OS" />
+<title>Adaptive Personal OS</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABBUlEQVR4nMWXwQ3CMBAENyfxQTx40RRlUAiiEMqgKVqIBLzyMbZvd50ofibnm/HFsc7T8XT+YscRowme9/d+Agt8RMIWKKGuhCXQgjkSskAGUSUkATa5IkELqCtj4ykBd4Mx81KBLMkrDryRKsDCexJZjqaAunJXoirglt2R+BPY8pvXckcWoMKzmJIRrRcO3JGIteGqRADA7XHpBl8/syyQzVmYUT5YQ4KFA8BUtmTM8dkrrwIHKr9hVokeRIVXBVwJB94UUCVcOFDZA7Ux0nRmC6H6AaYa7jy6I1Il2HipJ2STKrJyV5wlVytl3QtaEGev2DejEuZu1KG74QJ14QB5Dmw5fuIPguXq52MfAAAAAElFTkSuQmCC" />
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAGRElEQVR4nO3dTW4USRAF4GckNogFq7kUx+AgoznIHGMuNVdAQrMoVPbYlVX5E5n5IuK9FQK7OzLeR4Pt7uqXL1+/QVGu8mn3AApvhEMpRjiUYoRDKUY4lGKEQylGOP6Xv//8d/cIRBGO1xwy5OOMcPzOWxPycUQ4gCsN8gHhQNmBfGTHcS8guY/UOGq6z+wjL4761tP6SIqjte+cPjLi6Gs6oY90OEY6zuYjF47xdlP5SITDqtc8PrLgsG00iY8UOGZ0mcFHfBzzWgzvIziO2f3F9hEZx5rmAvsIi2NlZ1F9xMSxvq2QPgLi2NVTPB/RcOxtKJiPUDgYumGYwSpxcPC0wjPJYILgYOuDbZ6+RMDB2QTnVE1xj4O5A+bZauIbB//2+Se8iWMcXvbuZc6P8YrD18Z9TXvGJQ6Pu/Y4sz8cHrd8xN3kznC42++7+JrfEw5fmy3F0Snc4HC008d4OYsPHF62WR8XJ3KAw8UeO8J/LnYc/BscCfnpqHGQ784kzGfkxcG8NdvQnpQUB+2+JoXzvIw4ODc1O4SnpsNBuKO04cKRXAbb8YlwsK1mS6iWwIKDail7w7MKChw86yAJyUL24yBZBFsY1rIZB8MK3uafT593j/Ca7cvZiWP74d/lkCEfZ7bh4JTx8dfbs3FRe3Awyyj9zsbsWtcGHPwy7n9/S7YsbTUOLzJq/nRx1q9uKQ5fMuo/ZlkWL3AdDo8yWj9yQVaucREOvzL6Pn5qli1zBQ7vMkY+a1LWrHQ6jhgyxj/XPAsWOxdHJBlWt2CY2eudiCOeDNvbMcnUJc/CEVXGjFsbzLxVT8ERW8a82+zOpIXb48ggY/Ytd2TG2o1x5JGx5vabYr58SxzZZKy8l8rYVmCGI6cMwhgWYYMjuQw2iFZ1GOBILmPjnd7EpJRRHJLBcNeXGa9mCIdksA3wLoMF9eOQjMuQjHFmpKZOHJJxE6phMFBWDw7JeAzbSH2VNeOQjMqwDdZRXBsOyWgK23it9TXgkIyOsA3ZVGItDsnoDtuo9VVW4ZCMwbANXFnoMw7JMAnb2DW1PuCQDMOwDf9Y7h0OyTAP2xHuKy7ikIxJYTvITdHXOCRjatiOU6r7GsePv/6YOUxzvv/6uXsEy7Adp1R38Z8V+ZgUtoPcFH33H1L5MA/bEe4rfvhSVj4Mwzb8Y7nP3wSTD5OwjV1Ta9W3z+VjMGwDVxZa+4M3+egO26j1VTb8yF4+OsI2ZFOJbU/2kY+msI3XWl/z0wTlozJsg3UU1/MEY/l4DNtIfZV1vjRBPm5CNQwGyup/UZN8XIZkjDMjNQ29HFI+2AZ4l8GCRl9ILR8Md32Z8WoMLsEgH7vu9CYmpbx8+fpt/FbA9/wgLHxOTUgZMLzsE9vjB1Z1FlUGbC8Yl9BHYBkwv9RkKh+xZWDGRWqT+AgvA5Mubx3eRwYZmHdh/MA+ksjA1LfUCOkjjwzMfjOeYD5SycCCt/EK4yObDKx5A8AAPhLKwLK3DnXtI6cMrHzTYac+0srA4rcrd+cjswwsxgFXPpLLwHoccOJDMrAFB+h9SMaRPThA7EMyzpg9E6wvhM8fo8rev0LbHjmOED5+8GT7cjbjAMEKOMOwlv04wLEIqpAshAIHaNbBEJ5VsOAA01I2hmoJm79auUzaL2GoZIDqkeMM247WhPDUjDhAuamp4TwvKQ6w7mtGaE/KiwPEWzMM8xmpcYB7d+MhPx07DtBvsDv853KAAx722BoXJ/KBA062WRkvZ3GDA352eh9Hp/CEA642exlf8zvDAW/7fRt3k/vDAYdbhs+ZXeKAt137mvaMVxzws3Evc36MYxzwsHf+CW/iGwe4t888W03c4wBrB5xTNSUCDvA1wTZPX4LgAFMfPJMMJg4OcLTCMINVQuHA7m4iyUA8HNjXUDAZCIkDO3qKJwNRcWBtWyFlIDAOrOosqgzExoH5zQWWgfA4MLO/2DKQAQfmtBheBpLggHWXGWQgDw7YNZpEBlLhgEWveWQgGw6MtZtKBhLiQG/H2WQgJw60N51QBtLiQEvfOWUgMw7UtZ5WBpLjwFP3mWVAOFAWkFwGhOPIRweSAeE481aDZBwRjtccJiTjDOMVjBWS6JFDKUY4lGKEQylGOJRihEMpRjiUYv4DnCDBYFEpLuoAAAAASUVORK5CYII=" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   ADAPTIVE PERSONAL OS — DESIGN TOKENS
+   ============================================================ */
+:root {
+  /* Surfaces */
+  --bg: #0A0C10;
+  --surface: #12151B;
+  --surface-2: #171B23;
+  --surface-hover: #1C212B;
+  --border: #232833;
+  --border-soft: #1A1E27;
+
+  /* Text */
+  --text: #E7E9EE;
+  --text-muted: #8B92A0;
+  --text-faint: #565D6B;
+
+  /* Accents — each tied to a state, not decoration */
+  --accent-blue: #5C8DFF;    /* in progress / active */
+  --accent-blue-dim: rgba(92, 141, 255, 0.14);
+  --accent-green: #35D399;  /* completed / on track */
+  --accent-green-dim: rgba(53, 211, 153, 0.14);
+  --accent-amber: #F5A623;  /* deferred / needs attention */
+  --accent-amber-dim: rgba(245, 166, 35, 0.14);
+  --accent-red: #F2545B;    /* missed / skipped */
+  --accent-red-dim: rgba(242, 84, 91, 0.14);
+  --accent-violet: #A78BFA; /* recovery planned */
+  --accent-violet-dim: rgba(167, 139, 250, 0.14);
+
+  /* Type */
+  --font-display: 'Sora', 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  /* Layout */
+  --nav-width: 232px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02) inset;
+}
+
+/* ============================================================
+   RESET / BASE
+   ============================================================ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { color-scheme: dark; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+ul { list-style: none; }
+button { font-family: inherit; cursor: pointer; touch-action: manipulation; }
+:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--nav-width) 1fr;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   SIDEBAR NAV (desktop)
+   ============================================================ */
+.nav {
+  background: var(--surface);
+  border-right: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 22px 10px;
+}
+.nav__brand-mark {
+  font-size: 18px;
+  color: var(--accent-blue);
+}
+.nav__brand-text {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+.nav__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.nav__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.nav__item:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+.nav__item.is-active {
+  background: var(--accent-blue-dim);
+  color: var(--accent-blue);
+}
+.nav__icon {
+  width: 18px;
+  text-align: center;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.nav__footer {
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+}
+.nav__streak {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.nav__streak-num {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--accent-amber);
+}
+.nav__streak-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   MAIN / TOPBAR
+   ============================================================ */
+.main {
+  padding: 28px 36px 60px;
+  max-width: 1180px;
+}
+
+.topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.topbar__title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.topbar__subtitle {
+  color: var(--text-muted);
+  font-size: 13.5px;
+  margin-top: 4px;
+}
+
+.topbar__clock {
+  text-align: right;
+  font-family: var(--font-mono);
+}
+.topbar__time {
+  display: block;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.topbar__date {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ============================================================
+   VIEWS
+   ============================================================ */
+.view { display: none; }
+.view.is-active { display: block; animation: fadeIn 0.18s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   GRID SYSTEM
+   ============================================================ */
+.grid {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.grid--top { grid-template-columns: 1.1fr 1.4fr; }
+.grid--mid { grid-template-columns: 1.3fr 1fr; }
+.grid--bottom { grid-template-columns: 1fr 1fr; }
+
+@media (max-width: 980px) {
+  .grid--top, .grid--mid, .grid--bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+}
+
+.card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.card__head h2 {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  font-weight: 600;
+}
+.card__hint {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pill {
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: var(--accent-green-dim);
+  color: var(--accent-green);
+}
+.pill.is-amber { background: var(--accent-amber-dim); color: var(--accent-amber); }
+.pill.is-red { background: var(--accent-red-dim); color: var(--accent-red); }
+.pill.is-violet { background: var(--accent-violet-dim); color: var(--accent-violet); }
+
+/* ============================================================
+   STATUS RING
+   ============================================================ */
+.status-ring-row {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.ring {
+  --pct: 0;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(closest-side, var(--surface) 72%, transparent 73% 100%),
+    conic-gradient(var(--accent-green) calc(var(--pct) * 1%), var(--border) 0);
+  transition: background 0.4s ease;
+}
+.ring__value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.status-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.status-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.status-detail__label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.status-detail__value {
+  font-size: 14.5px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+}
+
+/* ============================================================
+   DAY RAIL (signature element)
+   A vertical timeline of today's time blocks with a live
+   "now" marker — the app's core idea (adaptive scheduling)
+   made visible at a glance.
+   ============================================================ */
+.day-rail {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-left: 18px;
+}
+
+.day-rail__block {
+  position: relative;
+  padding: 10px 0 10px 18px;
+  border-left: 2px solid var(--border);
+}
+.day-rail__block::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 14px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--border);
+}
+.day-rail__block.is-done::before { border-color: var(--accent-green); background: var(--accent-green); }
+.day-rail__block.is-now { border-left-color: var(--accent-blue); }
+.day-rail__block.is-now::before {
+  border-color: var(--accent-blue);
+  background: var(--accent-blue);
+  box-shadow: 0 0 0 4px var(--accent-blue-dim);
+}
+.day-rail__block.is-upcoming::before { border-color: var(--border); }
+
+.day-rail__time {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-faint);
+  display: block;
+  margin-bottom: 2px;
+}
+.day-rail__label {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.day-rail__block.is-now .day-rail__label { color: var(--accent-blue); }
+.day-rail__block.is-done .day-rail__label { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--border); }
+
+/* ============================================================
+   TASK LIST
+   ============================================================ */
+.task-list { display: flex; flex-direction: column; gap: 8px; }
+
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  transition: border-color 0.12s ease;
+}
+.task-item:hover { border-color: var(--border); }
+
+.task-item__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  flex-shrink: 0;
+}
+.task-item.is-completed .task-item__dot { background: var(--accent-green); }
+.task-item.is-progress .task-item__dot { background: var(--accent-blue); }
+.task-item.is-deferred .task-item__dot { background: var(--accent-amber); }
+.task-item.is-skipped .task-item__dot { background: var(--accent-red); }
+.task-item.is-recovery .task-item__dot { background: var(--accent-violet); }
+
+/* Standalone dot variants — used in the Daily Planner, where the
+   status class sits directly on the dot rather than a parent row. */
+.task-item__dot.is-progress { background: var(--accent-blue); }
+.task-item__dot.is-completed { background: var(--accent-green); }
+.task-item__dot.is-deferred { background: var(--accent-amber); }
+.task-item__dot.is-skipped { background: var(--accent-red); }
+.task-item__dot.is-recovery { background: var(--accent-violet); }
+
+.task-item__body { flex: 1; min-width: 0; }
+.task-item__name { font-size: 13.5px; font-weight: 500; }
+.task-item__meta { font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
+.task-item.is-completed .task-item__name { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--border); }
+
+.task-item__status {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   BAR CHART (weekly progress, pure CSS/JS)
+   ============================================================ */
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 120px;
+  padding-top: 6px;
+}
+.bar-chart__col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  justify-content: flex-end;
+}
+.bar-chart__track {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  background: var(--surface-2);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.bar-chart__fill {
+  width: 100%;
+  background: var(--accent-blue);
+  border-radius: 5px 5px 0 0;
+  transition: height 0.4s ease;
+}
+.bar-chart__col.is-today .bar-chart__fill { background: var(--accent-green); }
+.bar-chart__label {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+}
+
+/* ============================================================
+   RECOVERY DASHBOARD CARD
+   ============================================================ */
+.recovery-suggestion__text {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+.recovery-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.recovery-plan__row {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+}
+.recovery-plan__time {
+  font-family: var(--font-mono);
+  color: var(--accent-violet);
+  flex-shrink: 0;
+  width: 64px;
+}
+
+.recovery-card__score {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.recovery-card__score-value {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--accent-violet);
+}
+.recovery-card__score-label {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+.recovery-card__meta {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.recovery-card__deferred {
+  font-size: 12px;
+  color: var(--accent-amber);
+  margin-top: 10px;
+}
+
+/* ============================================================
+   RECOVERY PLANNER PAGE
+   ============================================================ */
+.grid--recovery-inputs { grid-template-columns: 1fr 1fr; }
+.grid--recovery-generate,
+.grid--recovery-review { grid-template-columns: 1fr; }
+.grid--recovery-mid { grid-template-columns: 1.3fr 1fr; }
+.grid--recovery-bottom { grid-template-columns: 1fr 1fr; }
+
+@media (max-width: 780px) {
+  .grid--recovery-inputs,
+  .grid--recovery-mid,
+  .grid--recovery-bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+.time-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 18px;
+  padding: 12px 14px;
+  color-scheme: dark;
+}
+.time-input:focus { outline: none; border-color: var(--accent-blue); }
+
+.energy-selector {
+  display: flex;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  gap: 4px;
+}
+.energy-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px;
+  border-radius: 7px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.energy-btn:hover { color: var(--text); }
+.energy-btn.is-active {
+  background: var(--surface);
+  color: var(--accent-violet);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.checkbox-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-violet);
+}
+
+.recovery-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.recovery-schedule__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  flex-wrap: wrap;
+}
+.recovery-schedule__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 140px;
+}
+.recovery-schedule__time {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-violet);
+}
+.recovery-schedule__name {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.recovery-schedule__mode {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.reality-score {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.reality-score__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.topic-list__item.is-deferred-item {
+  color: var(--accent-amber);
+}
+
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.review-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+.review-row__label {
+  font-size: 13px;
+  font-weight: 500;
+}
+.review-row__select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+}
+.review-row__select:focus { outline: none; border-color: var(--accent-blue); }
+
+/* ============================================================
+   QUICK ACTIONS
+   ============================================================ */
+.quick-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.quick-action {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  color: var(--text);
+  text-align: left;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.quick-action:hover { background: var(--surface-hover); border-color: var(--border); }
+.quick-action__icon { font-size: 15px; color: var(--accent-blue); }
+.quick-action__label { font-size: 12.5px; font-weight: 500; }
+
+/* ============================================================
+   DAILY PLANNER — progress summary
+   ============================================================ */
+.grid--planner-top { grid-template-columns: 1fr; }
+
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  border-radius: 100px;
+  background: var(--surface-2);
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.progress-bar__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+  border-radius: 100px;
+  transition: width 0.35s ease;
+}
+
+.planner-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.planner-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+}
+.planner-stat__label {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+.planner-stat__value {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+@media (max-width: 560px) {
+  .planner-stats { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   DAILY PLANNER — task grid / cards
+   ============================================================ */
+.planner-task-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+@media (max-width: 780px) {
+  .planner-task-grid { grid-template-columns: 1fr; }
+}
+
+.planner-card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: opacity 0.15s ease;
+}
+.planner-card.is-settled { opacity: 0.72; }
+
+.planner-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.planner-card__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.planner-card__icon { font-size: 14px; color: var(--accent-blue); }
+.planner-card__name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+}
+.planner-card__status {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+/* Mode selector — segmented control */
+.mode-selector {
+  display: flex;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 2px;
+}
+.mode-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+  text-transform: capitalize;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.mode-btn:hover:not(:disabled) { color: var(--text); }
+.mode-btn.is-active {
+  background: var(--surface);
+  color: var(--accent-blue);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.mode-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.planner-card__meta {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.planner-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.action-btn {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+.action-btn:hover { background: var(--surface-hover); }
+
+.action-btn--primary {
+  background: var(--accent-blue-dim);
+  border-color: transparent;
+  color: var(--accent-blue);
+}
+.action-btn--green {
+  background: var(--accent-green-dim);
+  border-color: transparent;
+  color: var(--accent-green);
+}
+.action-btn--amber {
+  background: var(--accent-amber-dim);
+  border-color: transparent;
+  color: var(--accent-amber);
+}
+.action-btn--ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+.action-btn--text {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-faint);
+  padding: 8px 6px;
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 2px;
+}
+.action-btn--text:hover { color: var(--text-muted); }
+
+/* ============================================================
+   PLAN PAGES (Python / English / Workout) — shared components
+   ============================================================ */
+.grid--plan-upload,
+.grid--plan-top,
+.grid--plan-mid,
+.grid--plan-bottom {
+  grid-template-columns: 1fr;
+}
+.grid--plan-top { grid-template-columns: 1fr 1.2fr; }
+.grid--plan-bottom { grid-template-columns: 1fr 1fr; }
+
+@media (max-width: 780px) {
+  .grid--plan-top, .grid--plan-bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+.plan-textarea {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.plan-textarea::placeholder { color: var(--text-faint); }
+.plan-textarea:focus { outline: none; border-color: var(--accent-blue); }
+
+.plan-upload__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.plan-upload__status {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.current-topic__value {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.mission__text {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  line-height: 1.6;
+}
+
+.topic-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.topic-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 13px;
+}
+.topic-list__item.is-done {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--border);
+}
+.topic-list__week {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+.topic-list__empty {
+  font-size: 13px;
+  color: var(--text-faint);
+  padding: 9px 2px;
+}
+
+/* ============================================================
+   AUTH OVERLAY — local device lock
+   ============================================================ */
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--bg);
+  display: flex; /* toggled to 'none' by auth.js once unlocked */
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  padding-top: calc(24px + env(safe-area-inset-top));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 28px 24px;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.auth-sub {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+
+.auth-label {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  margin-top: 10px;
+}
+
+.auth-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 16px; /* 16px avoids iOS Safari auto-zoom on focus */
+  padding: 12px 14px;
+  letter-spacing: 0.05em;
+}
+.auth-input:focus { outline: none; border-color: var(--accent-blue); }
+
+.auth-error {
+  font-size: 12px;
+  color: var(--accent-red);
+  min-height: 16px;
+  margin-top: 10px;
+}
+
+.auth-submit {
+  width: 100%;
+  text-align: center;
+  margin-top: 8px;
+  min-height: 48px;
+}
+
+.auth-forgot {
+  width: 100%;
+  text-align: center;
+  margin-top: 6px;
+}
+
+.topbar__lock {
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  padding: 8px 12px;
+  min-height: 40px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+.topbar__lock:hover { background: var(--surface-hover); color: var(--text); }
+
+/* ============================================================
+   COLLAPSIBLE CARDS (<details> used for Day Rail / Weekly Progress
+   — demoted to secondary, tap-to-expand content on Today)
+   ============================================================ */
+details.card { padding: 0; }
+details.card > *:not(summary) { padding: 0 20px 20px; }
+.card__head--summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  cursor: pointer;
+  list-style: none;
+  margin-bottom: 0;
+}
+.card__head--summary::-webkit-details-marker { display: none; }
+.card__head--summary h2 {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  font-weight: 600;
+}
+details[open] .card__head--summary { padding-bottom: 8px; }
+
+/* ============================================================
+   HERO CARD — "What's Next" on Today
+   ============================================================ */
+.card--hero {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 1px var(--accent-blue-dim), var(--shadow-card);
+}
+.hero-card__task {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.hero-card__icon {
+  font-size: 22px;
+  color: var(--accent-blue);
+  flex-shrink: 0;
+}
+.hero-card__name {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+}
+.hero-card__mission {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.hero-card__done {
+  font-size: 14px;
+  color: var(--accent-green);
+  font-weight: 500;
+}
+
+/* ============================================================
+   ONBOARDING CHECKLIST
+   ============================================================ */
+.onboarding-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.onboarding-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.onboarding-item:hover { background: var(--surface-2); }
+.onboarding-item__check {
+  font-size: 14px;
+  color: var(--text-faint);
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.onboarding-item.is-done .onboarding-item__check { color: var(--accent-green); }
+.onboarding-item__label { font-size: 13.5px; }
+.onboarding-item.is-done .onboarding-item__label {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--border);
+}
+
+/* ============================================================
+   RECOVERY PROMPT — conditional banner, only shown once
+   something is actually pending
+   ============================================================ */
+.card--recovery-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--accent-violet-dim);
+  border-color: var(--accent-violet);
+}
+.recovery-prompt__body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.recovery-prompt__icon {
+  font-size: 22px;
+  color: var(--accent-violet);
+}
+.recovery-prompt__title {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  font-weight: 600;
+}
+.recovery-prompt__sub {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ============================================================
+   LEARNING HUB — sub-tabs between tracks
+   ============================================================ */
+.learning-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  margin-bottom: 20px;
+  max-width: 320px;
+}
+.learning-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 12px;
+  border-radius: 7px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.learning-tab:hover { color: var(--text); }
+.learning-tab.is-active {
+  background: var(--surface);
+  color: var(--accent-blue);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.learning-track { display: none; }
+.learning-track.is-active { display: block; animation: fadeIn 0.18s ease; }
+
+/* ============================================================
+   INSIGHTS PAGE
+   ============================================================ */
+.insight-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.insight-list__item {
+  font-size: 13.5px;
+  line-height: 1.6;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--accent-blue);
+}
+.insight-list__item strong { color: var(--accent-blue); }
+.insight-list__empty {
+  font-size: 13px;
+  color: var(--text-faint);
+  padding: 12px 2px;
+}
+
+/* ============================================================
+   SETTINGS PAGE
+   ============================================================ */
+.settings-row {
+  margin-bottom: 10px;
+}
+.settings-file-label {
+  display: inline-block;
+  cursor: pointer;
+}
+
+/* ============================================================
+   PLACEHOLDER CARD (future phases)
+   ============================================================ */
+.placeholder-card {
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: 48px 32px;
+  text-align: center;
+  max-width: 480px;
+  margin: 40px auto;
+}
+.placeholder-card__icon {
+  font-size: 26px;
+  color: var(--accent-blue);
+  display: block;
+  margin-bottom: 14px;
+}
+.placeholder-card h2 {
+  font-family: var(--font-display);
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+.placeholder-card p {
+  color: var(--text-muted);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   RESPONSIVE — MOBILE (bottom tab bar)
+   ============================================================ */
+@media (max-width: 768px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    height: auto;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+    border-right: none;
+    border-top: 1px solid var(--border-soft);
+    z-index: 50;
+  }
+  .nav__brand, .nav__footer { display: none; }
+  .nav__list {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    overflow-x: auto;
+    flex: none;
+  }
+  .nav__item {
+    flex-direction: column;
+    gap: 3px;
+    font-size: 10px;
+    padding: 6px 8px;
+    min-width: 52px;
+  }
+  .nav__label { font-size: 9.5px; }
+
+  .main {
+    padding: 20px 16px calc(90px + env(safe-area-inset-bottom));
+  }
+
+  .topbar__clock { text-align: left; }
+
+  .status-ring-row { flex-wrap: wrap; }
+}
+
+@media (max-width: 768px) {
+  .action-btn { padding: 11px 16px; min-height: 44px; }
+  .mode-btn, .energy-btn { min-height: 40px; }
+  .nav__item { min-height: 48px; justify-content: center; }
+  .time-input { min-height: 48px; }
+  .checkbox-row input[type="checkbox"] { width: 20px; height: 20px; }
+  .plan-textarea { font-size: 16px; } /* prevents iOS Safari auto-zoom on focus */
+}
+
+@media (max-width: 480px) {
+  .quick-actions { grid-template-columns: 1fr; }
+  .topbar__title { font-size: 20px; }
+}
+
+</style>
+</head>
+<body>
+
+  <!-- AUTH OVERLAY — visible by default so there's never a flash of
+       unlocked content; auth.js hides it once the correct PIN is
+       entered (or immediately, if already unlocked this session). -->
+  <div id="authOverlay" class="auth-overlay">
+    <div class="auth-card">
+      <div class="auth-brand"><span class="nav__brand-mark">◈</span> Adaptive OS</div>
+
+      <!-- First run: choose a name + PIN -->
+      <form id="authSetupForm" class="auth-form">
+        <h2 class="auth-title">Set up your lock</h2>
+        <p class="auth-sub">This protects your data with a local PIN. There's no account or server — everything stays on this device.</p>
+
+        <label class="auth-label" for="authSetupName">Your name</label>
+        <input type="text" id="authSetupName" class="auth-input" placeholder="e.g. Adhil" maxlength="30" autocomplete="off" />
+
+        <label class="auth-label" for="authSetupPin">Choose a PIN (4–6 digits)</label>
+        <input type="password" id="authSetupPin" class="auth-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="••••" autocomplete="off" />
+
+        <label class="auth-label" for="authSetupPinConfirm">Confirm PIN</label>
+        <input type="password" id="authSetupPinConfirm" class="auth-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="••••" autocomplete="off" />
+
+        <p class="auth-error" id="authSetupError"></p>
+        <button type="submit" class="action-btn action-btn--primary auth-submit">Lock In &amp; Start</button>
+      </form>
+
+      <!-- Returning: enter PIN -->
+      <form id="authUnlockForm" class="auth-form" style="display:none;">
+        <h2 class="auth-title" id="authUnlockGreeting">Welcome back</h2>
+        <p class="auth-sub">Enter your PIN to unlock.</p>
+
+        <input type="password" id="authUnlockPin" class="auth-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="••••" autocomplete="off" />
+
+        <p class="auth-error" id="authUnlockError"></p>
+        <button type="submit" class="action-btn action-btn--primary auth-submit">Unlock</button>
+        <button type="button" class="action-btn action-btn--text auth-forgot" id="authForgotBtn">Forgot PIN? Reset app data</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="app-shell">
+
+    <!-- Sidebar (desktop) / Bottom bar (mobile) -->
+    <nav class="nav" id="mainNav">
+      <div class="nav__brand">
+        <span class="nav__brand-mark">◈</span>
+        <span class="nav__brand-text">Adaptive OS</span>
+      </div>
+
+      <ul class="nav__list">
+        <li><button class="nav__item is-active" data-view="today"><span class="nav__icon">⌂</span><span class="nav__label">Today</span></button></li>
+        <li><button class="nav__item" data-view="learning"><span class="nav__icon">⧉</span><span class="nav__label">Learning</span></button></li>
+        <li><button class="nav__item" data-view="fitness"><span class="nav__icon">↯</span><span class="nav__label">Fitness</span></button></li>
+        <li><button class="nav__item" data-view="recovery"><span class="nav__icon">◐</span><span class="nav__label">Recovery</span></button></li>
+        <li><button class="nav__item" data-view="insights"><span class="nav__icon">▲</span><span class="nav__label">Insights</span></button></li>
+        <li><button class="nav__item" data-view="settings"><span class="nav__icon">⚙</span><span class="nav__label">Settings</span></button></li>
+      </ul>
+
+      <div class="nav__footer">
+        <div class="nav__streak" id="navStreak">
+          <span class="nav__streak-num">0</span>
+          <span class="nav__streak-label">day streak</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main content -->
+    <main class="main">
+
+      <header class="topbar">
+        <div class="topbar__context">
+          <h1 class="topbar__title" id="viewTitle">Today</h1>
+          <p class="topbar__subtitle" id="viewSubtitle">What's next, and how the day's actually going.</p>
+        </div>
+        <div class="topbar__clock">
+          <span class="topbar__time" id="liveTime">--:--</span>
+          <span class="topbar__date" id="liveDate">-- -- --</span>
+        </div>
+        <button class="topbar__lock" id="topbarLockBtn" title="Lock app">🔒</button>
+      </header>
+
+      <!-- ============================================================
+           TODAY — merges the old Dashboard + Daily Planner into one
+           screen: what's next, am I on track, what's recoverable,
+           then the full task list and momentum detail below.
+           ============================================================ -->
+      <section class="view is-active" data-view="today" id="view-today">
+
+        <!-- Onboarding checklist — hidden once all 4 steps are done -->
+        <div class="card card--onboarding" id="onboardingChecklist" style="display:none;">
+          <div class="card__head">
+            <h2>Get Started</h2>
+            <span class="card__hint">4 steps</span>
+          </div>
+          <ul class="onboarding-list" id="onboardingList"><!-- populated by JS --></ul>
+        </div>
+
+        <!-- Recovery Prompt — only appears once there's something to recover -->
+        <div class="card card--recovery-prompt" id="recoveryPromptBanner" style="display:none;">
+          <div class="recovery-prompt__body">
+            <span class="recovery-prompt__icon">◐</span>
+            <div>
+              <p class="recovery-prompt__title" id="recoveryPromptTitle">Plan tonight</p>
+              <p class="recovery-prompt__sub" id="recoveryPromptSub">A couple of tasks are still open.</p>
+            </div>
+          </div>
+          <button class="action-btn action-btn--primary" id="recoveryPromptBtn">Open Recovery →</button>
+        </div>
+
+        <!-- Hero: what's next -->
+        <div class="card card--hero" id="heroCard">
+          <div class="card__head">
+            <h2>What's Next</h2>
+            <span class="card__hint" id="heroCardHint">—</span>
+          </div>
+          <div class="hero-card__body" id="heroCardBody"><!-- populated by today.js --></div>
+        </div>
+
+        <div class="grid grid--top">
+
+          <!-- Current status -->
+          <div class="card card--status">
+            <div class="card__head">
+              <h2>Status</h2>
+              <span class="pill" id="statusPill">On Track</span>
+            </div>
+            <div class="status-ring-row">
+              <div class="ring" id="completionRing" style="--pct:0">
+                <span class="ring__value" id="completionPct">0%</span>
+              </div>
+              <div class="status-details">
+                <div class="status-detail">
+                  <span class="status-detail__label">Today's completion</span>
+                  <span class="status-detail__value" id="completedCount">0 / 4 tasks</span>
+                </div>
+                <div class="status-detail">
+                  <span class="status-detail__label">Day</span>
+                  <span class="status-detail__value" id="dayOfWeek">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Day rail (signature element) — collapsed by default, it's
+               configuration-flavored, not decision-flavored -->
+          <details class="card card--rail">
+            <summary class="card__head card__head--summary">
+              <h2>Morning Schedule</h2>
+              <span class="card__hint">Tap to expand</span>
+            </summary>
+            <div class="day-rail" id="dayRail"><!-- populated by JS --></div>
+          </details>
+
+        </div>
+
+        <!-- Full task list — the detail view, always available -->
+        <div class="card card--tasks">
+          <div class="card__head">
+            <h2>Today's Tasks</h2>
+            <span class="card__hint" id="plannerPct">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-bar__fill" id="plannerProgressFill" style="width:0%"></div>
+          </div>
+          <div class="planner-stats" style="margin-bottom: 16px;">
+            <div class="planner-stat">
+              <span class="planner-stat__label">Completed</span>
+              <span class="planner-stat__value" id="plannerCompletedCount">0 / 4</span>
+            </div>
+            <div class="planner-stat">
+              <span class="planner-stat__label">Remaining work</span>
+              <span class="planner-stat__value" id="plannerRemaining">0 min</span>
+            </div>
+            <div class="planner-stat">
+              <span class="planner-stat__label">Deferred</span>
+              <span class="planner-stat__value" id="plannerDeferredCount">0</span>
+            </div>
+          </div>
+          <div class="planner-task-grid" id="plannerTaskGrid"><!-- populated by JS --></div>
+        </div>
+
+        <div class="grid grid--bottom">
+
+          <!-- Weekly progress — collapsed by default, it's reflective -->
+          <details class="card card--weekly">
+            <summary class="card__head card__head--summary">
+              <h2>Weekly Progress</h2>
+              <span class="card__hint" id="weeklyAvg">0% avg</span>
+            </summary>
+            <div class="bar-chart" id="weeklyChart"><!-- populated by JS --></div>
+          </details>
+
+          <!-- Recovery card -->
+          <div class="card card--recovery">
+            <div class="card__head">
+              <h2>Recovery</h2>
+              <span class="card__hint" id="recoveryCardHint">Adaptive</span>
+            </div>
+            <div id="recoveryCard" class="recovery-card"><!-- populated by JS --></div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ============================================================
+           LEARNING HUB — Python and English under one destination,
+           switched by an inner tab bar instead of two separate nav
+           items. (Track registry generalization is a deferred,
+           larger architecture change — see the strategy doc.)
+           ============================================================ -->
+      <section class="view" data-view="learning" id="view-learning">
+
+        <div class="learning-tabs" id="learningTabs">
+          <button class="learning-tab is-active" data-track="python">λ Python</button>
+          <button class="learning-tab" data-track="english">✎ English</button>
+        </div>
+
+        <!-- PYTHON TRACK -->
+        <div class="learning-track is-active" data-track="python" id="track-python">
+
+          <div class="grid grid--plan-upload">
+            <div class="card card--plan-upload">
+              <div class="card__head">
+                <h2>Upload Plan</h2>
+                <span class="card__hint">Paste ChatGPT output</span>
+              </div>
+              <textarea class="plan-textarea" id="pythonPlanInput" placeholder="Week 1&#10;Variables&#10;Data Types&#10;Input Output&#10;Operators&#10;Conditionals&#10;Loops&#10;Functions"></textarea>
+              <div class="plan-upload__row">
+                <button class="action-btn action-btn--primary" id="pythonSaveBtn">Save Plan</button>
+                <span class="plan-upload__status" id="pythonSaveStatus"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid--plan-top">
+            <div class="card">
+              <div class="card__head">
+                <h2>Current Topic</h2>
+                <span class="card__hint" id="pythonWeekHint">—</span>
+              </div>
+              <p class="current-topic__value" id="pythonCurrentTopic">Upload a plan to get started.</p>
+            </div>
+
+            <div class="card">
+              <div class="card__head">
+                <h2>Today's Mission</h2>
+                <span class="card__hint">Adaptive</span>
+              </div>
+              <p class="mission__text" id="pythonTodayMission">—</p>
+              <div class="planner-card__actions" id="pythonMissionActions"></div>
+            </div>
+          </div>
+
+          <div class="grid grid--plan-mid">
+            <div class="card">
+              <div class="card__head">
+                <h2>Progress</h2>
+                <span class="card__hint" id="pythonProgressPct">0%</span>
+              </div>
+              <div class="progress-bar"><div class="progress-bar__fill" id="pythonProgressFill" style="width:0%"></div></div>
+            </div>
+          </div>
+
+          <div class="grid grid--plan-bottom">
+            <div class="card">
+              <div class="card__head">
+                <h2>Completed Topics</h2>
+                <span class="card__hint" id="pythonCompletedCount">0</span>
+              </div>
+              <ul class="topic-list" id="pythonCompletedList">
+                <li class="topic-list__empty">Nothing completed yet.</li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <div class="card__head">
+                <h2>Remaining Topics</h2>
+                <span class="card__hint" id="pythonRemainingCount">0</span>
+              </div>
+              <ul class="topic-list" id="pythonRemainingList">
+                <li class="topic-list__empty">Upload a plan to see topics.</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ENGLISH TRACK -->
+        <div class="learning-track" data-track="english" id="track-english">
+
+          <div class="grid grid--plan-upload">
+            <div class="card card--plan-upload">
+              <div class="card__head">
+                <h2>Upload Plan</h2>
+                <span class="card__hint">Paste ChatGPT output</span>
+              </div>
+              <textarea class="plan-textarea" id="englishPlanInput" placeholder="Week 1&#10;Vocabulary Building&#10;Listening Practice&#10;Speaking Practice&#10;Grammar Basics&#10;Reading Practice"></textarea>
+              <div class="plan-upload__row">
+                <button class="action-btn action-btn--primary" id="englishSaveBtn">Save Plan</button>
+                <span class="plan-upload__status" id="englishSaveStatus"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid--plan-top">
+            <div class="card">
+              <div class="card__head">
+                <h2>Current Topic</h2>
+                <span class="card__hint" id="englishWeekHint">—</span>
+              </div>
+              <p class="current-topic__value" id="englishCurrentTopic">Upload a plan to get started.</p>
+            </div>
+
+            <div class="card">
+              <div class="card__head">
+                <h2>Today's Mission</h2>
+                <span class="card__hint">Adaptive</span>
+              </div>
+              <p class="mission__text" id="englishTodayMission">—</p>
+              <div class="planner-card__actions" id="englishMissionActions"></div>
+            </div>
+          </div>
+
+          <div class="grid grid--plan-mid">
+            <div class="card">
+              <div class="card__head">
+                <h2>Progress</h2>
+                <span class="card__hint" id="englishProgressPct">0%</span>
+              </div>
+              <div class="progress-bar"><div class="progress-bar__fill" id="englishProgressFill" style="width:0%"></div></div>
+            </div>
+          </div>
+
+          <div class="grid grid--plan-bottom">
+            <div class="card">
+              <div class="card__head">
+                <h2>Completed Topics</h2>
+                <span class="card__hint" id="englishCompletedCount">0</span>
+              </div>
+              <ul class="topic-list" id="englishCompletedList">
+                <li class="topic-list__empty">Nothing completed yet.</li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <div class="card__head">
+                <h2>Remaining Topics</h2>
+                <span class="card__hint" id="englishRemainingCount">0</span>
+              </div>
+              <ul class="topic-list" id="englishRemainingList">
+                <li class="topic-list__empty">Upload a plan to see topics.</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- FITNESS (formerly Workout Manager) -->
+      <section class="view" data-view="fitness" id="view-fitness">
+
+        <div class="grid grid--plan-upload">
+          <div class="card card--plan-upload">
+            <div class="card__head">
+              <h2>Upload Plan</h2>
+              <span class="card__hint">Paste ChatGPT output</span>
+            </div>
+            <textarea class="plan-textarea" id="workoutPlanInput" placeholder="Monday&#10;Upper Body Strength&#10;Tuesday&#10;Lower Body Strength&#10;Wednesday&#10;Core & Mobility&#10;Thursday&#10;Upper Body Hypertrophy&#10;Friday&#10;Lower Body Hypertrophy&#10;Saturday&#10;Full Body&#10;Sunday&#10;Rest"></textarea>
+            <div class="plan-upload__row">
+              <button class="action-btn action-btn--primary" id="workoutSaveBtn">Save Plan</button>
+              <span class="plan-upload__status" id="workoutSaveStatus"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid--plan-top">
+          <div class="card">
+            <div class="card__head">
+              <h2>Today's Workout</h2>
+              <span class="card__hint" id="workoutTodayDay">—</span>
+            </div>
+            <p class="mission__text" id="workoutTodayLabel">Upload a plan to get started.</p>
+            <div class="planner-card__actions" id="workoutMissionActions"></div>
+          </div>
+        </div>
+
+        <div class="grid grid--plan-mid">
+          <div class="card">
+            <div class="card__head">
+              <h2>Weekly Consistency</h2>
+              <span class="card__hint" id="workoutConsistencyPct">0%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-bar__fill" id="workoutConsistencyFill" style="width:0%"></div></div>
+            <div class="planner-stats">
+              <div class="planner-stat">
+                <span class="planner-stat__label">Completed Sessions</span>
+                <span class="planner-stat__value" id="workoutCompletedCount">0</span>
+              </div>
+              <div class="planner-stat">
+                <span class="planner-stat__label">Missed Sessions</span>
+                <span class="planner-stat__value" id="workoutMissedCount">0</span>
+              </div>
+              <div class="planner-stat">
+                <span class="planner-stat__label">Scheduled / Week</span>
+                <span class="planner-stat__value" id="workoutScheduledCount">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- RECOVERY PLANNER -->
+      <section class="view" data-view="recovery" id="view-recovery">
+
+        <div class="grid grid--recovery-inputs">
+          <div class="card">
+            <div class="card__head">
+              <h2>Work End Time</h2>
+              <span class="card__hint">Today</span>
+            </div>
+            <input type="time" class="time-input" id="recoveryWorkEndInput" />
+          </div>
+
+          <div class="card">
+            <div class="card__head">
+              <h2>Energy Level</h2>
+              <span class="card__hint">Affects mode upgrades</span>
+            </div>
+            <div class="energy-selector">
+              <button class="energy-btn" data-energy="low">Low</button>
+              <button class="energy-btn is-active" data-energy="medium">Medium</button>
+              <button class="energy-btn" data-energy="high">High</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid--recovery-generate">
+          <div class="card">
+            <label class="checkbox-row">
+              <input type="checkbox" id="recoverWorkoutToggle" />
+              <span>Recover Workout <span class="card__hint">(off by default — workout resumes tomorrow unless checked)</span></span>
+            </label>
+            <button class="action-btn action-btn--primary" id="recoveryGenerateBtn" style="margin-top: 12px;">Generate Recovery Plan</button>
+            <p class="plan-upload__status" id="recoveryAvailableSummary" style="margin-top: 10px;">Enter your work end time and generate a plan to see available recovery time.</p>
+          </div>
+        </div>
+
+        <div class="grid grid--recovery-mid">
+          <div class="card">
+            <div class="card__head">
+              <h2>Recovery Schedule</h2>
+              <span class="card__hint">Tonight</span>
+            </div>
+            <ul class="recovery-schedule" id="recoveryScheduleList">
+              <li class="topic-list__empty">Generate a plan to see tonight's schedule.</li>
+            </ul>
+          </div>
+
+          <div class="card card--reality-score">
+            <div class="card__head">
+              <h2>Reality Score</h2>
+              <span class="card__hint">Today</span>
+            </div>
+            <div class="reality-score">
+              <div class="ring" id="recoveryScoreRing" style="--pct:40">
+                <span class="ring__value" id="recoveryScoreValue">40</span>
+              </div>
+              <span class="reality-score__label" id="recoveryScoreLabel">Minimal Progress</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid--recovery-bottom">
+          <div class="card">
+            <div class="card__head">
+              <h2>Deferred Tasks</h2>
+              <span class="card__hint">Not forgotten</span>
+            </div>
+            <ul class="topic-list" id="recoveryDeferredList">
+              <li class="topic-list__empty">Nothing deferred yet.</li>
+            </ul>
+            <p class="recovery-suggestion__text" id="recoveryWorkoutNote"></p>
+          </div>
+
+          <div class="card">
+            <div class="card__head">
+              <h2>Recovery Trend</h2>
+              <span class="card__hint">Last 7 days</span>
+            </div>
+            <div class="bar-chart" id="recoveryTrendChart"></div>
+            <div class="planner-stats" style="margin-top: 14px;">
+              <div class="planner-stat">
+                <span class="planner-stat__label">Success Rate</span>
+                <span class="planner-stat__value" id="recoverySuccessRate">—</span>
+              </div>
+              <div class="planner-stat">
+                <span class="planner-stat__label">Sessions</span>
+                <span class="planner-stat__value" id="recoverySessionsCount">0</span>
+              </div>
+              <div class="planner-stat">
+                <span class="planner-stat__label">Deferred (7d)</span>
+                <span class="planner-stat__value" id="recoveryDeferredTotal">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid--recovery-review">
+          <div class="card">
+            <div class="card__head">
+              <h2>End of Day Review</h2>
+              <span class="card__hint" id="reviewSubmitStatus"></span>
+            </div>
+
+            <p class="mission__text" style="margin-bottom: 6px;">What did you complete today?</p>
+            <ul class="topic-list" id="reviewCompletedList" style="margin-bottom: 18px;">
+              <li class="topic-list__empty">Nothing completed yet today.</li>
+            </ul>
+
+            <p class="mission__text" style="margin-bottom: 6px;">What was missed, and why?</p>
+            <div id="reviewReasonsList" class="review-list"></div>
+
+            <button class="action-btn action-btn--primary" id="reviewSubmitBtn" style="margin-top: 14px;">Submit Review</button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============================================================
+           INSIGHTS (formerly the empty Analytics stub) — plain-English
+           sentences with a number in them, backed by data already
+           being collected elsewhere in the app.
+           ============================================================ -->
+      <section class="view" data-view="insights" id="view-insights">
+
+        <div class="card">
+          <div class="card__head">
+            <h2>This Week</h2>
+            <span class="card__hint">Last 7 days</span>
+          </div>
+          <div class="bar-chart" id="insightsTrendChart"></div>
+          <div class="planner-stats" style="margin-top: 14px;">
+            <div class="planner-stat">
+              <span class="planner-stat__label">Recovery Success</span>
+              <span class="planner-stat__value" id="insightsSuccessRate">—</span>
+            </div>
+            <div class="planner-stat">
+              <span class="planner-stat__label">Sessions</span>
+              <span class="planner-stat__value" id="insightsSessionsCount">0</span>
+            </div>
+            <div class="planner-stat">
+              <span class="planner-stat__label">Deferred (7d)</span>
+              <span class="planner-stat__value" id="insightsDeferredTotal">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head">
+            <h2>What the app has noticed</h2>
+            <span class="card__hint">Updated live</span>
+          </div>
+          <ul class="insight-list" id="insightSentences">
+            <!-- populated by JS: consistency trend, learning velocity,
+                 workout adherence, peak productivity window, missed-task
+                 causes — each a plain sentence with a number in it -->
+          </ul>
+        </div>
+
+      </section>
+
+      <!-- ============================================================
+           SETTINGS — data export/import, PIN management, and (later)
+           plan management shortcuts.
+           ============================================================ -->
+      <section class="view" data-view="settings" id="view-settings">
+
+        <div class="card">
+          <div class="card__head">
+            <h2>Your Data</h2>
+            <span class="card__hint">Local only</span>
+          </div>
+          <p class="auth-sub" style="margin-bottom: 14px;">
+            Everything lives in this browser's storage — nothing is sent anywhere. Download a backup
+            regularly, since clearing site data or losing this device loses everything otherwise.
+          </p>
+          <div class="settings-row">
+            <button class="action-btn action-btn--primary" id="settingsExportBtn">Download Backup (.json)</button>
+          </div>
+          <div class="settings-row">
+            <label class="action-btn action-btn--ghost settings-file-label" for="settingsImportInput">Restore from Backup</label>
+            <input type="file" id="settingsImportInput" accept="application/json" style="display:none;" />
+          </div>
+          <p class="plan-upload__status" id="settingsDataStatus"></p>
+        </div>
+
+        <div class="card">
+          <div class="card__head">
+            <h2>Change PIN</h2>
+            <span class="card__hint">Local lock</span>
+          </div>
+          <label class="auth-label" for="settingsCurrentPin">Current PIN</label>
+          <input type="password" id="settingsCurrentPin" class="auth-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="••••" autocomplete="off" />
+          <label class="auth-label" for="settingsNewPin">New PIN (4–6 digits)</label>
+          <input type="password" id="settingsNewPin" class="auth-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="••••" autocomplete="off" />
+          <p class="auth-error" id="settingsPinError"></p>
+          <button class="action-btn action-btn--primary" id="settingsChangePinBtn" style="margin-top: 10px;">Update PIN</button>
+        </div>
+
+        <div class="card">
+          <div class="card__head">
+            <h2>Danger Zone</h2>
+          </div>
+          <div class="settings-row">
+            <button class="action-btn action-btn--ghost" id="settingsLockBtn">Lock App Now</button>
+          </div>
+          <div class="settings-row">
+            <button class="action-btn action-btn--text" id="settingsResetBtn" style="color: var(--accent-red);">Erase All Data</button>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.bundle.js"></script>
+</body>
+</html>
