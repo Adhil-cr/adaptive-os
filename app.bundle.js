@@ -21,8 +21,21 @@ const PlanEngine = (() => {
 
   const DAY_NAMES = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-  const WEEK_HEADER_RE = /^week\s+(\d+)\b/i;
+  // Requires the week number to be followed immediately by end-of-line,
+  // a colon, or a dash — matches "Week 1", "Week 1:", "WEEK 01: Title".
+  // Deliberately does NOT match "WEEK 01 GOAL" (a trailing recap line
+  // some plans include after their last day) — without this, that line
+  // gets mistaken for a second "Week 1" header and blows up parsing.
+  const WEEK_HEADER_RE = /^week\s+(\d+)\s*(?::|-|—|–|$)/i;
   const DAY_HEADER_RE = new RegExp(`^(${DAY_NAMES.join('|')})\\b`, 'i');
+
+  // Matches a "DAY NNN" sub-header inside a Week section, e.g.
+  // "DAY 001 — Variables, Data Types & Input/Output" or "Day 3: Loops".
+  // This is unrelated to DAY_HEADER_RE above (that's Workout's weekday
+  // matcher) — this one is for richer Python/English plan formats
+  // where each day is its own block of Targets/Outcome detail under
+  // one topic, not a flat list of lines.
+  const TOPIC_DAY_HEADER_RE = /^day\s+\d+\b/i;
 
   function splitLines(text) {
     return (text || '')
@@ -55,16 +68,67 @@ const PlanEngine = (() => {
   }
 
   /**
-   * Python / English plans: "Week N" headers followed by one
-   * topic per line. A single line containing multiple topics
-   * separated by 2+ spaces is also split, so both
-   *   Week 1
-   *   Variables
-   *   Data Types
-   * and
-   *   Week 1
-   *   Variables  Data Types
-   * parse to the same topic list.
+   * Extracts a day block's title from its header line, e.g.
+   * "DAY 001 — Variables, Data Types & Input/Output" -> "Variables,
+   * Data Types & Input/Output". Supports an em dash, en dash,
+   * hyphen, or colon as the separator; falls back to whatever
+   * follows the day number if none of those are present.
+   */
+  function extractDayTitle(line) {
+    const match = line.match(/^day\s+\d+\s*[—\-–:]\s*(.+)$/i);
+    if (match) return match[1].trim();
+    const stripped = line.replace(/^day\s+\d+\s*/i, '').trim();
+    return stripped || line.trim();
+  }
+
+  /**
+   * Turns one Week section's raw lines into topics. Two formats are
+   * supported, auto-detected:
+   *
+   *   1. Day-block format — "DAY NNN — Title" sub-headers, each
+   *      followed by free-form detail (Targets/Outcome/bullets/
+   *      whatever). Each DAY becomes exactly ONE topic (its title);
+   *      everything under it is kept as supplementary `detail`
+   *      rather than being split into separate topics. This is what
+   *      fixes a rich, structured plan exploding into one topic per
+   *      bullet point.
+   *
+   *   2. Flat format (no DAY headers found) — the original
+   *      behavior: one topic per line, with a single line
+   *      containing 2+ spaces still splitting into multiple topics.
+   */
+  function parseWeekTopics(items) {
+    const hasDayBlocks = items.some(line => TOPIC_DAY_HEADER_RE.test(line));
+
+    if (hasDayBlocks) {
+      const topics = [];
+      let current = null;
+
+      items.forEach(line => {
+        if (TOPIC_DAY_HEADER_RE.test(line)) {
+          current = { topic: extractDayTitle(line), detail: [] };
+          topics.push(current);
+        } else if (current) {
+          current.detail.push(line);
+        }
+        // Any lines before the first DAY header are discarded —
+        // in practice this is just the "WEEK N: ..." header line,
+        // which is already consumed as the section header itself.
+      });
+
+      return topics.map(t => ({ topic: t.topic, detail: t.detail.join(' ') }));
+    }
+
+    return items
+      .flatMap(item => item.split(/\s{2,}/).map(t => t.trim()).filter(Boolean))
+      .map(topic => ({ topic, detail: '' }));
+  }
+
+  /**
+   * Python / English plans: "Week N" headers, each containing
+   * either a flat list of one-topic-per-line entries or a set of
+   * "DAY NNN — Title" blocks (see parseWeekTopics above) — both
+   * parse to the same flat topic list either way.
    */
   function parseTopicPlan(rawText) {
     const lines = splitLines(rawText);
@@ -76,13 +140,13 @@ const PlanEngine = (() => {
 
     const weeks = sections.map(section => ({
       week: section.key,
-      topics: section.items.flatMap(item =>
-        item.split(/\s{2,}/).map(t => t.trim()).filter(Boolean)
-      )
+      topics: parseWeekTopics(section.items)
     }));
 
     const flatTopics = [];
-    weeks.forEach(w => w.topics.forEach(topic => flatTopics.push({ week: w.week, topic })));
+    weeks.forEach(w => w.topics.forEach(t =>
+      flatTopics.push({ week: w.week, topic: t.topic, detail: t.detail || '' })
+    ));
 
     return { weeks, flatTopics };
   }
@@ -3192,4 +3256,3 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     });
   });
 }
-
