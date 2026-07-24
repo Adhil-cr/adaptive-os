@@ -57,7 +57,7 @@ const PlanEngine = (() => {
 
     lines.forEach(line => {
       if (isHeader(line)) {
-        current = { key: headerKey(line), items: [] };
+        current = { key: headerKey(line), header: line, items: [] };
         sections.push(current);
       } else if (current) {
         current.items.push(line);
@@ -152,22 +152,87 @@ const PlanEngine = (() => {
   }
 
   /**
-   * Workout plans: weekday-name headers, each followed by a
-   * single session label (multi-line labels are joined with a
-   * space). A day with no recognized label defaults to 'Rest'.
+   * Strips a markdown heading marker (#, ##, ###...) and any
+   * leading non-letter characters (emoji, symbols) from a line, so
+   * a header like "## 🔥 Monday – Upper Body Strength" can still be
+   * recognized as starting with a weekday name underneath all that
+   * formatting. Only applied to lines that are actual markdown
+   * headings — see isWorkoutDayHeader for why that gate matters.
+   */
+  function stripHeadingNoise(line) {
+    return line.replace(/^#+\s*/, '').replace(/^[^\p{L}]+/u, '').trim();
+  }
+
+  /**
+   * A day header is either a markdown heading containing a weekday
+   * name (cleaned of emoji/symbols first), or — for the simpler flat
+   * format — a bare weekday name with nothing before it. Deliberately
+   * does NOT clean non-heading lines before testing: a plan's notes
+   * section can easily contain a bullet like "* Tuesday" or "*
+   * Thursday only" (recovery-timing notes, not a new day block), and
+   * stripping its leading "* " would wrongly match that too. Gating
+   * the cleanup on an actual "#" heading marker avoids that.
+   */
+  function isWorkoutDayHeader(line) {
+    if (/^#+\s*/.test(line)) {
+      return DAY_HEADER_RE.test(stripHeadingNoise(line));
+    }
+    return DAY_HEADER_RE.test(line);
+  }
+
+  function workoutDayKey(line) {
+    const cleaned = /^#+\s*/.test(line) ? stripHeadingNoise(line) : line;
+    const match = cleaned.match(DAY_HEADER_RE);
+    return match ? match[1].toLowerCase() : null;
+  }
+
+  /**
+   * Pulls a session title straight off the header line itself, e.g.
+   * "🦵 Tuesday – Lower Body Strength + Neck" -> "Lower Body Strength
+   * + Neck". Returns null if the header is just the bare day name
+   * with nothing after it (e.g. plain "Monday") — the caller falls
+   * back to the day's content lines in that case, which is what the
+   * simpler "Monday" / "Upper Body Strength" (on its own line)
+   * format relies on.
+   */
+  function extractInlineWorkoutLabel(headerLine) {
+    const cleaned = /^#+\s*/.test(headerLine) ? stripHeadingNoise(headerLine) : headerLine;
+    const match = cleaned.match(DAY_HEADER_RE);
+    if (!match) return null;
+
+    const afterDay = cleaned.slice(match[0].length).trim();
+    const sepMatch = afterDay.match(/^[—\-–:]\s*(.+)$/);
+    if (sepMatch) return sepMatch[1].trim();
+    return afterDay || null;
+  }
+
+  /**
+   * Workout plans: a weekday-name header per day, in either of two
+   * shapes:
+   *
+   *   1. Rich format — the session title sits right on the header
+   *      line ("## 🔥 Monday – Upper Body Strength"), possibly
+   *      followed by markdown sub-headers (### Chest) and exercise
+   *      bullets. Those sub-headers/bullets are exercise detail, not
+   *      the session label — only the header's own title is used;
+   *      everything under it is parsed but intentionally not kept,
+   *      matching the app's one-line-per-day data model.
+   *
+   *   2. Flat format — a bare day name ("Monday") with the label on
+   *      its own line(s) underneath, exactly as before.
+   *
+   *   A day with no recognized label defaults to 'Rest'.
    */
   function parseWorkoutPlan(rawText) {
     const lines = splitLines(rawText);
-    const sections = groupBySections(
-      lines,
-      line => DAY_HEADER_RE.test(line),
-      line => line.match(DAY_HEADER_RE)[1].toLowerCase()
-    );
+    const sections = groupBySections(lines, isWorkoutDayHeader, workoutDayKey);
 
     const days = {};
     DAY_NAMES.forEach(d => { days[d] = 'Rest'; });
+
     sections.forEach(section => {
-      const label = section.items.join(' ').trim();
+      const inlineLabel = extractInlineWorkoutLabel(section.header);
+      const label = inlineLabel || section.items.join(' ').trim();
       if (label) days[section.key] = label;
     });
 
