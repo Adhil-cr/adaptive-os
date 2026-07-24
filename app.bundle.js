@@ -207,33 +207,75 @@ const PlanEngine = (() => {
   }
 
   /**
+   * Groups a day's raw content lines under their "### Group" sub-
+   * headers (e.g. Chest / Back / Shoulders), stripping bullet
+   * markers off each exercise line. A stray line with no sub-header
+   * above it (a trailing note like "No neck training today.") is
+   * kept as its own ungrouped entry rather than dropped, so nothing
+   * silently disappears.
+   */
+  function parseWorkoutDayDetail(items) {
+    const groups = [];
+    let current = null;
+
+    items.forEach(line => {
+      if (/^#{2,6}\s+/.test(line)) {
+        current = { group: line.replace(/^#{2,6}\s+/, '').trim(), exercises: [] };
+        groups.push(current);
+      } else {
+        const cleanedLine = line.replace(/^[*•\-]\s*/, '').trim();
+        if (!cleanedLine) return;
+        if (current) {
+          current.exercises.push(cleanedLine);
+        } else {
+          groups.push({ group: null, exercises: [cleanedLine] });
+        }
+      }
+    });
+
+    return groups;
+  }
+
+  /**
    * Workout plans: a weekday-name header per day, in either of two
    * shapes:
    *
    *   1. Rich format — the session title sits right on the header
    *      line ("## 🔥 Monday – Upper Body Strength"), possibly
    *      followed by markdown sub-headers (### Chest) and exercise
-   *      bullets. Those sub-headers/bullets are exercise detail, not
-   *      the session label — only the header's own title is used;
-   *      everything under it is parsed but intentionally not kept,
-   *      matching the app's one-line-per-day data model.
+   *      bullets. The header's title becomes the day's label; the
+   *      sub-headers/bullets underneath are kept as structured
+   *      `detail` (an array of { group, exercises }) for a
+   *      tap-to-expand view — not exploded into separate days or
+   *      thrown away.
    *
    *   2. Flat format — a bare day name ("Monday") with the label on
-   *      its own line(s) underneath, exactly as before.
+   *      its own line(s) underneath, exactly as before. No
+   *      structured detail in this case (there's nothing to
+   *      structure).
    *
-   *   A day with no recognized label defaults to 'Rest'.
+   *   A day with no recognized label defaults to { label: 'Rest',
+   *   detail: [] }.
    */
   function parseWorkoutPlan(rawText) {
     const lines = splitLines(rawText);
     const sections = groupBySections(lines, isWorkoutDayHeader, workoutDayKey);
 
     const days = {};
-    DAY_NAMES.forEach(d => { days[d] = 'Rest'; });
+    DAY_NAMES.forEach(d => { days[d] = { label: 'Rest', detail: [] }; });
 
     sections.forEach(section => {
       const inlineLabel = extractInlineWorkoutLabel(section.header);
       const label = inlineLabel || section.items.join(' ').trim();
-      if (label) days[section.key] = label;
+      if (!label) return;
+      days[section.key] = {
+        label,
+        // Only the rich format (inline label on the header line)
+        // has real sub-headers/exercises to structure — the flat
+        // format's "items" already *is* the label, so there's
+        // nothing left to show underneath it.
+        detail: inlineLabel ? parseWorkoutDayDetail(section.items) : []
+      };
     });
 
     return { days };
@@ -752,27 +794,48 @@ const Storage = (() => {
     }
   }
 
-  /** Deep-merge defaults into whatever is stored, so new fields
-   *  added in later phases don't clobber existing user data. */
+  /**
+   * Deep-merges stored data with DEFAULT_STATE so new fields added
+   * in later versions don't clobber existing data.
+   *
+   * CRITICAL FIX: the previous version of this function only ever
+   * copied keys that existed in `defaults` itself. That's correct
+   * for fixed-shape objects (settings, auth) but is destructive for
+   * every *dynamic dictionary* in this app's data model — tasks,
+   * missions, history, and recoverySessions are all keyed by date
+   * (or category), and DEFAULT_STATE necessarily has them start as
+   * `{}` with zero keys. The old code would recurse into that empty
+   * template and silently produce an empty result, discarding every
+   * date's actual data — on every single Storage.init() call, i.e.
+   * every time the app was opened. This version merges the *union*
+   * of keys from both `defaults` and `stored`, so keys that only
+   * exist in `stored` (a real date, a real category) are preserved
+   * as-is instead of being dropped.
+   */
   function _mergeDefaults(stored, defaults) {
-    const out = Array.isArray(defaults) ? [...defaults] : { ...defaults };
-    if (defaults && typeof defaults === 'object' && !Array.isArray(defaults)) {
-      for (const key of Object.keys(defaults)) {
-        if (stored && Object.prototype.hasOwnProperty.call(stored, key)) {
-          if (
-            typeof defaults[key] === 'object' &&
-            defaults[key] !== null &&
-            !Array.isArray(defaults[key]) &&
-            typeof stored[key] === 'object' &&
-            stored[key] !== null
-          ) {
-            out[key] = _mergeDefaults(stored[key], defaults[key]);
-          } else {
-            out[key] = stored[key];
-          }
-        }
-      }
+    if (Array.isArray(defaults)) {
+      return Array.isArray(stored) ? stored : [...defaults];
     }
+    if (typeof defaults !== 'object' || defaults === null) {
+      return stored !== undefined ? stored : defaults;
+    }
+
+    const out = { ...defaults };
+    if (!stored || typeof stored !== 'object' || Array.isArray(stored)) return out;
+
+    const allKeys = new Set([...Object.keys(defaults), ...Object.keys(stored)]);
+    allKeys.forEach(key => {
+      if (!Object.prototype.hasOwnProperty.call(stored, key)) return; // nothing stored — keep the default
+      const defaultVal = defaults[key];
+      const storedVal = stored[key];
+      const bothAreMergeableObjects =
+        defaultVal !== undefined &&
+        typeof defaultVal === 'object' && defaultVal !== null && !Array.isArray(defaultVal) &&
+        typeof storedVal === 'object' && storedVal !== null && !Array.isArray(storedVal);
+
+      out[key] = bothAreMergeableObjects ? _mergeDefaults(storedVal, defaultVal) : storedVal;
+    });
+
     return out;
   }
 
@@ -1012,6 +1075,16 @@ const Storage = (() => {
   // MISSION API (Phase 3)
   // ------------------------------------------------------------
 
+  /** Normalizes a workout day entry to { label, detail } regardless
+   *  of whether it was saved before or after detail-tracking was
+   *  added — plans uploaded under the old format stored a bare
+   *  string per day, and there's no reason to force a re-upload
+   *  just to keep reading them correctly. */
+  function _normalizeWorkoutDay(entry) {
+    if (typeof entry === 'string') return { label: entry, detail: [] };
+    return entry || { label: 'Rest', detail: [] };
+  }
+
   /** Ensures today's (or a given day's) mission exists for every
    *  plan-backed category that has a plan uploaded. Idempotent —
    *  safe to call from every view's render(). This is the "Daily
@@ -1031,12 +1104,13 @@ const Storage = (() => {
       if (category === 'workout') {
         const [y, m, d] = dateKey.split('-').map(Number);
         const dayName = PlanEngine.dayNameFor(new Date(y, m - 1, d));
-        const label = plan.days[dayName];
+        const dayEntry = _normalizeWorkoutDay(plan.days[dayName]);
         state.missions[dateKey][category] = {
           type: 'workout',
           day: dayName,
-          label,
-          isRest: PlanEngine.isRestLabel(label),
+          label: dayEntry.label,
+          detail: dayEntry.detail,
+          isRest: PlanEngine.isRestLabel(dayEntry.label),
           generatedAt: new Date().toISOString(),
           advanced: false
         };
@@ -1146,15 +1220,19 @@ const Storage = (() => {
       missed: 0,
       consistencyPct: 0,
       todayLabel: null,
+      todayDetail: [],
       todayDay: null,
-      isRestToday: true
+      isRestToday: true,
+      missedThisWeek: []
     };
     if (!plan) return stats;
 
     const today = new Date();
     stats.todayDay = PlanEngine.dayNameFor(today);
-    stats.todayLabel = plan.days[stats.todayDay];
-    stats.isRestToday = PlanEngine.isRestLabel(stats.todayLabel);
+    const todayEntry = _normalizeWorkoutDay(plan.days[stats.todayDay]);
+    stats.todayLabel = todayEntry.label;
+    stats.todayDetail = todayEntry.detail;
+    stats.isRestToday = PlanEngine.isRestLabel(todayEntry.label);
 
     const state = getState();
     for (let i = 0; i < 7; i++) {
@@ -1162,7 +1240,7 @@ const Storage = (() => {
       d.setDate(d.getDate() - i);
       const dKey = todayKey(d);
       const dayName = PlanEngine.dayNameFor(d);
-      const label = plan.days[dayName];
+      const label = _normalizeWorkoutDay(plan.days[dayName]).label;
       if (PlanEngine.isRestLabel(label)) continue;
 
       stats.scheduled += 1;
@@ -1172,6 +1250,31 @@ const Storage = (() => {
       else if (status === 'skipped' || status === 'deferred') stats.missed += 1;
     }
     stats.consistencyPct = stats.scheduled === 0 ? 0 : Math.round((stats.completed / stats.scheduled) * 100);
+
+    // "Missed This Week" — tracked against the actual calendar week
+    // (Monday–Sunday containing today), not the rolling 7-day window
+    // above. Per design: missing a day never reschedules anything —
+    // this is purely visibility into what slipped, for this specific
+    // week, so nothing quietly disappears.
+    const dayOfWeekMon0 = (today.getDay() + 6) % 7; // 0=Monday...6=Sunday
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - dayOfWeekMon0);
+
+    for (let i = 0; i < dayOfWeekMon0; i++) { // strictly *before* today only
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const dKey = todayKey(d);
+      const dayName = PlanEngine.dayNameFor(d);
+      const dayEntry = _normalizeWorkoutDay(plan.days[dayName]);
+      if (PlanEngine.isRestLabel(dayEntry.label)) continue;
+
+      const dayTask = state.tasks[dKey] && state.tasks[dKey].workout;
+      const status = dayTask ? dayTask.status : 'not_started';
+      if (status !== 'completed') {
+        stats.missedThisWeek.push({ day: dayName, label: dayEntry.label, status });
+      }
+    }
+
     return stats;
   }
 
@@ -2384,30 +2487,72 @@ const WorkoutManager = (() => {
     return word ? word.charAt(0).toUpperCase() + word.slice(1) : '';
   }
 
+  const MISSED_STATUS_LABEL = {
+    deferred: 'Deferred',
+    skipped: 'Skipped',
+    not_started: 'Not started',
+    in_progress: 'In progress',
+    recovery_planned: 'Recovery Planned'
+  };
+
+  function renderMissedThisWeek(stats) {
+    const list = document.getElementById('workoutMissedThisWeekList');
+    if (!stats.hasPlan || stats.missedThisWeek.length === 0) {
+      list.innerHTML = '<li class="topic-list__empty">Nothing missed yet this week.</li>';
+      return;
+    }
+    list.innerHTML = stats.missedThisWeek.map(m => `
+      <li class="topic-list__item">
+        ${capitalize(m.day)} — ${m.label}
+        <span class="topic-list__week">${MISSED_STATUS_LABEL[m.status] || m.status}</span>
+      </li>
+    `).join('');
+  }
+
+  function renderDetailGroups(groups) {
+    if (!groups || groups.length === 0) {
+      return '<p class="workout-detail__empty">No exercise breakdown for this session.</p>';
+    }
+    return groups.map(g => `
+      <div class="workout-detail__group">
+        ${g.group ? `<h3 class="workout-detail__group-title">${g.group}</h3>` : ''}
+        <ul class="workout-detail__exercises">
+          ${g.exercises.map(ex => `<li>${ex}</li>`).join('')}
+        </ul>
+      </div>
+    `).join('');
+  }
+
   function renderMission() {
     const stats = Storage.getWorkoutStats();
     renderSaveStatus(Storage.getPlan(CATEGORY));
 
     const dayLabelEl = document.getElementById('workoutTodayDay');
     const missionTextEl = document.getElementById('workoutTodayLabel');
+    const detailBodyEl = document.getElementById('workoutDetailBody');
     const actionsEl = document.getElementById('workoutMissionActions');
 
     if (!stats.hasPlan) {
       dayLabelEl.textContent = '—';
       missionTextEl.textContent = 'Upload a plan to get started.';
+      detailBodyEl.innerHTML = '';
       actionsEl.innerHTML = '';
       return;
     }
 
-    dayLabelEl.textContent = capitalize(stats.todayDay);
+    const dayName = capitalize(stats.todayDay);
+    dayLabelEl.textContent = dayName;
 
     if (stats.isRestToday) {
-      missionTextEl.textContent = 'Rest day — nothing scheduled.';
+      missionTextEl.textContent = `${dayName} — Rest day, nothing scheduled.`;
+      detailBodyEl.innerHTML = '';
       actionsEl.innerHTML = '';
       return;
     }
 
-    missionTextEl.textContent = stats.todayLabel;
+    // "Monday – Upper Body Strength" as the tap-to-expand bar text
+    missionTextEl.textContent = `${dayName} – ${stats.todayLabel}`;
+    detailBodyEl.innerHTML = renderDetailGroups(stats.todayDetail);
 
     const task = Storage.getTask(CATEGORY);
     actionsEl.innerHTML = UI.renderActionButtonsHTML(CATEGORY, task.status);
@@ -2426,6 +2571,7 @@ const WorkoutManager = (() => {
     document.getElementById('workoutCompletedCount').textContent = String(stats.completed);
     document.getElementById('workoutMissedCount').textContent = String(stats.missed);
     document.getElementById('workoutScheduledCount').textContent = String(stats.scheduled);
+    renderMissedThisWeek(stats);
   }
 
   function render() {
