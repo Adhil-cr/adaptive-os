@@ -1141,14 +1141,19 @@ details[open] .card__head--summary { padding-bottom: 8px; }
 }
 .hero-card__task {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 14px;
   margin-bottom: 16px;
+}
+.hero-card__task-body {
+  flex: 1;
+  min-width: 0;
 }
 .hero-card__icon {
   font-size: 22px;
   color: var(--accent-blue);
   flex-shrink: 0;
+  margin-top: 2px;
 }
 .hero-card__name {
   font-family: var(--font-display);
@@ -1159,6 +1164,10 @@ details[open] .card__head--summary { padding-bottom: 8px; }
   font-size: 13px;
   color: var(--text-muted);
   margin-top: 2px;
+}
+.hero-card__workout-detail {
+  margin-top: 8px;
+  margin-bottom: 0;
 }
 .hero-card__done {
   font-size: 14px;
@@ -1907,43 +1916,7 @@ details[open] .card__head--summary { padding-bottom: 8px; }
             <div class="energy-selector">
               <button class="energy-btn" data-energy="low">Low</button>
               <button class="energy-btn is-active" data-energy="medium">Medium</button>
-              <button class="energy-btn" data-energy="high">High</button><!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#0A0C10" />
-<meta name="mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="Adaptive OS" />
-<title>Adaptive Personal OS</title>
-<link rel="manifest" href="manifest.json" />
-<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABBUlEQVR4nMWXwQ3CMBAENyfxQTx40RRlUAiiEMqgKVqIBLzyMbZvd50ofibnm/HFsc7T8XT+YscRowme9/d+Agt8RMIWKKGuhCXQgjkSskAGUSUkATa5IkELqCtj4ykBd4Mx81KBLMkrDryRKsDCexJZjqaAunJXoirglt2R+BPY8pvXckcWoMKzmJIRrRcO3JGIteGqRADA7XHpBl8/syyQzVmYUT5YQ4KFA8BUtmTM8dkrrwIHKr9hVokeRIVXBVwJB94UUCVcOFDZA7Ux0nRmC6H6AaYa7jy6I1Il2HipJ2STKrJyV5wlVytl3QtaEGev2DejEuZu1KG74QJ14QB5Dmw5fuIPguXq52MfAAAAAElFTkSuQmCC" />
-<link rel="apple-touch-icon" href="data:image/png;base64,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" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-/* ============================================================
-   ADAPTIVE PERSONAL OS — DESIGN TOKENS
-   ============================================================ */
-:root {
-  /* Surfaces */
-  --bg: #0A0C10;
-  --surface: #12151B;
-  --surface-2: #171B23;
-  --surface-hover: #1C212B;
-  --border: #232833;
-  --border-soft: #1A1E27;
-
-  /* Text */
-  --text: #E7E9EE;
-  --text-muted: #8B92A0;
-  --text-faint: #565D6B;
-
-  /* Accents — each tied to a state, not decoration */
-
+              <button class="energy-btn" data-energy="high">High</button>
             </div>
           </div>
         </div>
@@ -2106,6 +2079,21 @@ details[open] .card__head--summary { padding-bottom: 8px; }
             <input type="file" id="settingsImportInput" accept="application/json" style="display:none;" />
           </div>
           <p class="plan-upload__status" id="settingsDataStatus"></p>
+        </div>
+
+        <div class="card">
+          <div class="card__head">
+            <h2>App Version</h2>
+            <span class="card__hint">Safe — keeps your data</span>
+          </div>
+          <p class="auth-sub" style="margin-bottom: 14px;">
+            If the app looks like it's missing something after an update, it's usually a stale cached
+            copy, not your data. This clears the app's cache and reloads the newest version — your
+            plans, tasks, and history are untouched.
+          </p>
+          <div class="settings-row">
+            <button class="action-btn action-btn--primary" id="settingsForceRefreshBtn">Get Latest Version</button>
+          </div>
         </div>
 
         <div class="card">
