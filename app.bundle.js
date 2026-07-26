@@ -1094,7 +1094,6 @@ const Storage = (() => {
   function generateMissionsFor(dateKey = todayKey()) {
     const state = getState();
     if (!state.missions[dateKey]) state.missions[dateKey] = {};
-    let changed = false;
 
     PLAN_CATEGORIES.forEach(category => {
       if (state.missions[dateKey][category]) return; // already generated
@@ -1126,17 +1125,24 @@ const Storage = (() => {
           advanced: false
         };
       }
-      changed = true;
     });
 
-    if (changed) setState(state);
+    // Always persist, even if nothing changed this call — the empty
+    // `state.missions[dateKey] = {}` initialization above still
+    // needs to be saved. A previous version of this function only
+    // called setState() when something actually changed, which
+    // meant a fresh read via getState() immediately afterward could
+    // find missions[dateKey] completely missing (e.g. before any
+    // plan has ever been uploaded) and throw when a caller indexed
+    // straight into it.
+    setState(state);
     return state.missions[dateKey];
   }
 
   /** Reads (generating first if needed) a single day's mission for a category. */
   function getMission(category, dateKey = todayKey()) {
-    generateMissionsFor(dateKey);
-    return getState().missions[dateKey][category] || null;
+    const missionsForDay = generateMissionsFor(dateKey);
+    return missionsForDay[category] || null;
   }
 
   /** Moves a topic plan's cursor forward and records the topic as
@@ -1781,10 +1787,24 @@ const Auth = (() => {
 
   /** Full local reset — the only recovery path for a forgotten PIN,
    *  since there's no server to verify identity against. Wipes
-   *  every bit of app data, not just the PIN. */
-  function resetEverything() {
+   *  every bit of app data, AND the service worker's cache and
+   *  registration — clearing only localStorage/sessionStorage was
+   *  a real bug: it reset your data but left a stale, possibly
+   *  outdated cached copy of the app itself still in control,
+   *  which could make "start fresh" not actually load fresh code. */
+  async function resetEverything() {
     localStorage.clear();
     sessionStorage.clear();
+
+    if ('caches' in window) {
+      const names = await caches.keys();
+      await Promise.all(names.map(name => caches.delete(name)));
+    }
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(reg => reg.unregister()));
+    }
+
     location.reload();
   }
 
@@ -2022,6 +2042,24 @@ const UI = (() => {
     });
   }
 
+  /** Renders a workout mission's structured detail (muscle-group
+   *  headers + exercise lists) as HTML. Shared by the Fitness page
+   *  and the Today Hero card so both expand identically instead of
+   *  each having their own copy of this markup. */
+  function renderWorkoutDetailGroups(groups) {
+    if (!groups || groups.length === 0) {
+      return '<p class="workout-detail__empty">No exercise breakdown for this session.</p>';
+    }
+    return groups.map(g => `
+      <div class="workout-detail__group">
+        ${g.group ? `<h3 class="workout-detail__group-title">${g.group}</h3>` : ''}
+        <ul class="workout-detail__exercises">
+          ${g.exercises.map(ex => `<li>${ex}</li>`).join('')}
+        </ul>
+      </div>
+    `).join('');
+  }
+
   /** Estimated minutes for a task at a given mode, falling back
    *  to that task's standard mode if the requested one isn't defined. */
   function estimateMinutes(taskKey, mode) {
@@ -2111,6 +2149,7 @@ const UI = (() => {
     bindActionButtons,
     renderModeSelectorHTML,
     bindModeSelector,
+    renderWorkoutDetailGroups,
     formatTime,
     formatDate,
     dayOfWeek,
@@ -2509,20 +2548,6 @@ const WorkoutManager = (() => {
     `).join('');
   }
 
-  function renderDetailGroups(groups) {
-    if (!groups || groups.length === 0) {
-      return '<p class="workout-detail__empty">No exercise breakdown for this session.</p>';
-    }
-    return groups.map(g => `
-      <div class="workout-detail__group">
-        ${g.group ? `<h3 class="workout-detail__group-title">${g.group}</h3>` : ''}
-        <ul class="workout-detail__exercises">
-          ${g.exercises.map(ex => `<li>${ex}</li>`).join('')}
-        </ul>
-      </div>
-    `).join('');
-  }
-
   function renderMission() {
     const stats = Storage.getWorkoutStats();
     renderSaveStatus(Storage.getPlan(CATEGORY));
@@ -2552,7 +2577,7 @@ const WorkoutManager = (() => {
 
     // "Monday – Upper Body Strength" as the tap-to-expand bar text
     missionTextEl.textContent = `${dayName} – ${stats.todayLabel}`;
-    detailBodyEl.innerHTML = renderDetailGroups(stats.todayDetail);
+    detailBodyEl.innerHTML = UI.renderWorkoutDetailGroups(stats.todayDetail);
 
     const task = Storage.getTask(CATEGORY);
     actionsEl.innerHTML = UI.renderActionButtonsHTML(CATEGORY, task.status);
@@ -3117,7 +3142,9 @@ const Today = (() => {
     const mission = Storage.getMission(key);
     if (!mission) return `Mode: ${task.mode}`;
     if (mission.type === 'workout') {
-      return mission.isRest ? 'Rest day' : mission.label;
+      if (mission.isRest) return 'Rest day';
+      const dayName = mission.day ? mission.day.charAt(0).toUpperCase() + mission.day.slice(1) : '';
+      return dayName ? `${dayName} – ${mission.label}` : mission.label;
     }
     return mission.isComplete ? 'Plan complete 🎉' : mission.topic;
   }
@@ -3137,12 +3164,32 @@ const Today = (() => {
     const task = Storage.getTask(key);
     hintEl.textContent = UI.STATUS_LABEL[task.status];
 
+    // Workout missions get a tap-to-expand exercise breakdown,
+    // identical to the one on the Fitness page — everything else
+    // (Python/English/Startup) just shows its mission line as text.
+    let missionHtml;
+    if (key === 'workout' && Storage.hasPlan('workout')) {
+      const mission = Storage.getMission(key);
+      const groups = (mission && mission.detail) ? mission.detail : [];
+      missionHtml = `
+        <details class="workout-detail hero-card__workout-detail">
+          <summary class="workout-detail__summary">
+            <span>${missionLine(key)}</span>
+            <span class="workout-detail__chevron">▾</span>
+          </summary>
+          <div class="workout-detail__body">${UI.renderWorkoutDetailGroups(groups)}</div>
+        </details>
+      `;
+    } else {
+      missionHtml = `<p class="hero-card__mission">${missionLine(key)}</p>`;
+    }
+
     bodyEl.innerHTML = `
       <div class="hero-card__task">
         <span class="hero-card__icon">${meta.icon}</span>
-        <div>
+        <div class="hero-card__task-body">
           <p class="hero-card__name">${meta.label}</p>
-          <p class="hero-card__mission">${missionLine(key)}</p>
+          ${missionHtml}
         </div>
       </div>
       <div class="planner-card__actions" id="heroCardActions"></div>
@@ -3334,16 +3381,45 @@ const Settings = (() => {
     }
   }
 
-  function handleReset() {
+  /** Non-destructive version of the cache-clearing part of
+   *  handleReset — clears the service worker's cache and forces a
+   *  fresh fetch of every file, WITHOUT touching any saved data.
+   *  This is what most "I updated the files but nothing changed"
+   *  reports actually need, rather than a full data wipe. */
+  async function handleForceRefresh() {
+    const statusEl = document.getElementById('settingsDataStatus');
+    if ('caches' in window) {
+      const names = await caches.keys();
+      await Promise.all(names.map(name => caches.delete(name)));
+    }
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(reg => reg.unregister()));
+    }
+    statusEl.textContent = 'Cache cleared — reloading with the latest files...';
+    setTimeout(() => location.reload(), 600);
+  }
+
+  async function handleReset() {
     const confirmed = confirm(
       'This erases everything on this device — plans, tasks, streaks, history, your PIN. ' +
       'Download a backup first if you want to keep anything. Continue?'
     );
-    if (confirmed) {
-      localStorage.clear();
-      sessionStorage.clear();
-      location.reload();
+    if (!confirmed) return;
+
+    localStorage.clear();
+    sessionStorage.clear();
+
+    if ('caches' in window) {
+      const names = await caches.keys();
+      await Promise.all(names.map(name => caches.delete(name)));
     }
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(reg => reg.unregister()));
+    }
+
+    location.reload();
   }
 
   function bind() {
@@ -3351,6 +3427,7 @@ const Settings = (() => {
     document.getElementById('settingsImportInput').addEventListener('change', handleImportFile);
     document.getElementById('settingsChangePinBtn').addEventListener('click', handleChangePin);
     document.getElementById('settingsLockBtn').addEventListener('click', () => Auth.lockNow());
+    document.getElementById('settingsForceRefreshBtn').addEventListener('click', handleForceRefresh);
     document.getElementById('settingsResetBtn').addEventListener('click', handleReset);
   }
 
