@@ -18,7 +18,7 @@
  * ------------------------------------------------------------
  */
 
-const CACHE_NAME = 'adaptive-os-v5';
+const CACHE_NAME = 'adaptive-os-v6';
 
 const APP_SHELL = [
   './',
