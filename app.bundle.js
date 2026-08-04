@@ -4,16 +4,15 @@
  * ------------------------------------------------------------
  * Pure parsing logic — no DOM, no LocalStorage. This is the one
  * place that turns pasted ChatGPT text into structured data for
- * Python, English, and Workout plans.
+ * learning tracks (Python, English, and any user-added track) and
+ * Workout plans.
  *
  * Every category is parsed with the same underlying routine,
  * groupBySections(): scan lines top to bottom, and whenever a
  * line matches that category's "header" pattern (a "Week N" line
- * for Python/English, a weekday name for Workout), start a new
+ * for learning tracks, a weekday name for Workout), start a new
  * section and bucket every following line under it until the
- * next header. Python/English and Workout only differ in what
- * counts as a header and how a section's lines are turned into
- * data afterwards — the grouping itself is shared.
+ * next header.
  * ------------------------------------------------------------
  */
 
@@ -31,10 +30,7 @@ const PlanEngine = (() => {
 
   // Matches a "DAY NNN" sub-header inside a Week section, e.g.
   // "DAY 001 — Variables, Data Types & Input/Output" or "Day 3: Loops".
-  // This is unrelated to DAY_HEADER_RE above (that's Workout's weekday
-  // matcher) — this one is for richer Python/English plan formats
-  // where each day is its own block of Targets/Outcome detail under
-  // one topic, not a flat list of lines.
+  // Unrelated to DAY_HEADER_RE above (that's Workout's weekday matcher).
   const TOPIC_DAY_HEADER_RE = /^day\s+\d+\b/i;
 
   function splitLines(text) {
@@ -49,7 +45,9 @@ const PlanEngine = (() => {
    * line starts a new section; `headerKey(line)` derives that
    * section's key from the header line itself. Lines before the
    * first recognized header are dropped — a plan is expected to
-   * open with one.
+   * open with one. Each section also stores the raw header line
+   * itself (`header`), so callers that need more than just a key
+   * (e.g. an inline title on the header line) can extract it.
    */
   function groupBySections(lines, isHeader, headerKey) {
     const sections = [];
@@ -89,13 +87,11 @@ const PlanEngine = (() => {
    *      followed by free-form detail (Targets/Outcome/bullets/
    *      whatever). Each DAY becomes exactly ONE topic (its title);
    *      everything under it is kept as supplementary `detail`
-   *      rather than being split into separate topics. This is what
-   *      fixes a rich, structured plan exploding into one topic per
-   *      bullet point.
+   *      rather than being split into separate topics.
    *
-   *   2. Flat format (no DAY headers found) — the original
-   *      behavior: one topic per line, with a single line
-   *      containing 2+ spaces still splitting into multiple topics.
+   *   2. Flat format (no DAY headers found) — one topic per line,
+   *      with a single line containing 2+ spaces still splitting
+   *      into multiple topics.
    */
   function parseWeekTopics(items) {
     const hasDayBlocks = items.some(line => TOPIC_DAY_HEADER_RE.test(line));
@@ -111,9 +107,6 @@ const PlanEngine = (() => {
         } else if (current) {
           current.detail.push(line);
         }
-        // Any lines before the first DAY header are discarded —
-        // in practice this is just the "WEEK N: ..." header line,
-        // which is already consumed as the section header itself.
       });
 
       return topics.map(t => ({ topic: t.topic, detail: t.detail.join(' ') }));
@@ -125,10 +118,11 @@ const PlanEngine = (() => {
   }
 
   /**
-   * Python / English plans: "Week N" headers, each containing
-   * either a flat list of one-topic-per-line entries or a set of
-   * "DAY NNN — Title" blocks (see parseWeekTopics above) — both
-   * parse to the same flat topic list either way.
+   * Learning-track plans (Python, English, or any user-added
+   * track): "Week N" headers, each containing either a flat list
+   * of one-topic-per-line entries or a set of "DAY NNN — Title"
+   * blocks (see parseWeekTopics above) — both parse to the same
+   * flat topic list either way.
    */
   function parseTopicPlan(rawText) {
     const lines = splitLines(rawText);
@@ -191,9 +185,7 @@ const PlanEngine = (() => {
    * "🦵 Tuesday – Lower Body Strength + Neck" -> "Lower Body Strength
    * + Neck". Returns null if the header is just the bare day name
    * with nothing after it (e.g. plain "Monday") — the caller falls
-   * back to the day's content lines in that case, which is what the
-   * simpler "Monday" / "Upper Body Strength" (on its own line)
-   * format relies on.
+   * back to the day's content lines in that case.
    */
   function extractInlineWorkoutLabel(headerLine) {
     const cleaned = /^#+\s*/.test(headerLine) ? stripHeadingNoise(headerLine) : headerLine;
@@ -210,9 +202,7 @@ const PlanEngine = (() => {
    * Groups a day's raw content lines under their "### Group" sub-
    * headers (e.g. Chest / Back / Shoulders), stripping bullet
    * markers off each exercise line. A stray line with no sub-header
-   * above it (a trailing note like "No neck training today.") is
-   * kept as its own ungrouped entry rather than dropped, so nothing
-   * silently disappears.
+   * above it is kept as its own ungrouped entry rather than dropped.
    */
   function parseWorkoutDayDetail(items) {
     const groups = [];
@@ -246,13 +236,11 @@ const PlanEngine = (() => {
    *      bullets. The header's title becomes the day's label; the
    *      sub-headers/bullets underneath are kept as structured
    *      `detail` (an array of { group, exercises }) for a
-   *      tap-to-expand view — not exploded into separate days or
-   *      thrown away.
+   *      tap-to-expand view.
    *
    *   2. Flat format — a bare day name ("Monday") with the label on
-   *      its own line(s) underneath, exactly as before. No
-   *      structured detail in this case (there's nothing to
-   *      structure).
+   *      its own line(s) underneath. No structured detail in this
+   *      case.
    *
    *   A day with no recognized label defaults to { label: 'Rest',
    *   detail: [] }.
@@ -270,10 +258,6 @@ const PlanEngine = (() => {
       if (!label) return;
       days[section.key] = {
         label,
-        // Only the rich format (inline label on the header line)
-        // has real sub-headers/exercises to structure — the flat
-        // format's "items" already *is* the label, so there's
-        // nothing left to show underneath it.
         detail: inlineLabel ? parseWorkoutDayDetail(section.items) : []
       };
     });
@@ -292,14 +276,15 @@ const PlanEngine = (() => {
 
   /**
    * Builds a full page controller ({init, render}) for a
-   * topic-based plan page (Python or English). Python and
-   * English are structurally identical — "Week N" curriculum,
-   * a cursor, Current Topic / Today's Mission / Completed /
-   * Remaining / Progress % — so this one factory drives both
-   * pages instead of each having its own copy of this logic.
+   * topic-based plan page (any learning track — Python, English, or
+   * a user-added one). All tracks are structurally identical —
+   * "Week N" curriculum, a cursor, Current Topic / Today's Mission /
+   * Completed / Remaining / Progress % — so this one factory drives
+   * every track's page instead of each having its own copy of this
+   * logic. This is what lets a newly-added track work immediately
+   * with zero new code.
    *
-   * `ids` maps every DOM element the page needs by id — see
-   * pythonManager.js / englishManager.js for the concrete lists.
+   * `ids` maps every DOM element the page needs by id.
    */
   function createTopicPlanController(category, ids) {
 
@@ -410,8 +395,6 @@ const PlanEngine = (() => {
       const saveBtn = document.getElementById(ids.saveBtnId);
       if (saveBtn) saveBtn.addEventListener('click', handleSave);
 
-      // Restore whatever was last saved into the textarea so the
-      // page doesn't look empty on a revisit.
       const plan = Storage.getPlan(category);
       const textarea = document.getElementById(ids.textareaId);
       if (plan && textarea) textarea.value = plan.raw;
@@ -439,26 +422,28 @@ const PlanEngine = (() => {
  * The core feature of the app. Pure logic — no DOM, no
  * LocalStorage — so this file is exactly what would need to
  * move to a Django backend later, unchanged, if the app grows
- * beyond a single browser tab. Everything here is a function of
- * its inputs; storage.js is the only thing that feeds it real
- * data and saves the result.
+ * beyond a single browser tab.
  *
- * Recovery Algorithm (matches the Phase 4 spec's 6 steps):
+ * Recovery Algorithm (matches the original 6-step spec):
  *   1. Identify unfinished tasks       -> caller passes `candidates`
- *   2. Sort by recovery priority       -> done inside buildRecoveryPlan
+ *   2. Sort by recovery priority       -> caller passes `priorityOrder`
  *   3. Calculate available time        -> computeAvailableTime()
  *   4. Assign task modes (Minimum first) -> buildRecoveryPlan()
  *   5. Generate evening schedule       -> buildRecoveryPlan() (clock times)
  *   6. Defer lower-priority tasks      -> buildRecoveryPlan() (deferred[])
+ *
+ * IMPORTANT (architecture note): this module used to hardcode a
+ * fixed RECOVERY_PRIORITY = ['python','english','startup','workout']
+ * array, which baked "exactly these 4 categories" into the engine
+ * itself. Since the app now supports an arbitrary number of
+ * user-added learning tracks, priority order and category lists are
+ * no longer constants here — the caller (storage.js, which knows
+ * the current track registry) computes and passes them in on every
+ * call. This file stays purely a function of its inputs.
  * ------------------------------------------------------------
  */
 
 const RecoveryEngine = (() => {
-
-  // Recovery priorities are the reverse of the morning order:
-  // Python is fought for first in the evening, Workout last (and
-  // only if explicitly opted into — see the Workout Rule below).
-  const RECOVERY_PRIORITY = ['python', 'english', 'startup', 'workout'];
 
   const MODE_RANK = { minimum: 0, standard: 1, extended: 2 };
 
@@ -467,28 +452,29 @@ const RecoveryEngine = (() => {
   // explicitly opts in via "Recover Workout", never automatically.
   const WORKOUT_RECOVERY_MINUTES = { minimum: 20, standard: 30, extended: 45 };
 
+  // Default mode minutes for a newly-added learning track that
+  // hasn't been given its own preset — Startup's original tuning
+  // (a middle-ground pace) is a reasonable universal default.
+  const DEFAULT_TRACK_MINUTES = { minimum: 15, standard: 30, extended: 45 };
+
   const DEFAULTS = {
     dinnerMinutes: 30,
     windDownMinutes: 15,
     targetSleepMinutes: 22 * 60 + 30, // 10:30 PM
     eveningRecoveryLimitMinutes: 90,
     // A small cushion reserved at the end of the recovery window so
-    // the schedule doesn't run right up against Wind Down. Without
-    // this, a 45-minute window (Python 20 + English 10 = 30 used,
-    // 15 left) would exactly fit Startup's minimum (15) — but the
-    // spec's own worked example defers Startup in that exact case,
-    // which only happens with this buffer in place.
+    // the schedule doesn't run right up against Wind Down.
     transitionBufferMinutes: 10
   };
 
-  /** Minutes for a given category + mode. Python/English/Startup
-   *  reuse the same Smart Task Mode table the Daily Planner uses
+  /** Minutes for a given category + mode. Learning tracks reuse the
+   *  same Smart Task Mode table the Daily Planner uses
    *  (UI.TASK_MODE_MINUTES) — one set of numbers, not a second copy. */
   function minutesForMode(category, mode) {
     if (category === 'workout') {
       return WORKOUT_RECOVERY_MINUTES[mode] ?? WORKOUT_RECOVERY_MINUTES.minimum;
     }
-    const table = (typeof UI !== 'undefined' && UI.TASK_MODE_MINUTES[category]) || {};
+    const table = (typeof UI !== 'undefined' && UI.TASK_MODE_MINUTES[category]) || DEFAULT_TRACK_MINUTES;
     return table[mode] ?? table.standard ?? 0;
   }
 
@@ -517,8 +503,10 @@ const RecoveryEngine = (() => {
    * Steps 1-6. `candidates` must already be filtered by the caller
    * to only unfinished, non-skipped categories (and should only
    * include 'workout' if the user explicitly opted into recovering
-   * it) — this function just prioritizes, budgets, and schedules
-   * whatever list it's given.
+   * it). `priorityOrder` is a full ordered list of every possible
+   * category (all current learning tracks, then 'workout' last) —
+   * computed by the caller from the live track registry, not a
+   * fixed constant.
    *
    * Energy level controls the *optional upgrade pass* that runs
    * after every candidate has a Minimum-mode slot:
@@ -528,11 +516,11 @@ const RecoveryEngine = (() => {
    *   - high:   every scheduled item may upgrade toward Standard
    *             then Extended, in priority order, while time remains.
    * The hard 90-minute cap is enforced by whatever `availableMinutes`
-   * the caller passes in — this function never schedules more than
-   * that, regardless of energy level.
+   * the caller passes in.
    */
-  function buildRecoveryPlan({ candidates, availableMinutes, recoveryStartMinutes, energyLevel = 'medium' }) {
-    const ordered = RECOVERY_PRIORITY.filter(c => candidates.includes(c));
+  function buildRecoveryPlan({ candidates, priorityOrder, availableMinutes, recoveryStartMinutes, energyLevel = 'medium' }) {
+    const order = priorityOrder && priorityOrder.length ? priorityOrder : candidates;
+    const ordered = order.filter(c => candidates.includes(c));
 
     let remaining = Math.max(0, availableMinutes);
     const scheduled = [];
@@ -593,24 +581,30 @@ const RecoveryEngine = (() => {
 
   /**
    * Reality Score — deliberately simple and deterministic: it's a
-   * function of how many of the 4 daily tasks ended the day
-   * completed, nothing more. The floor is 40, never lower — "the
-   * goal is progress, not perfection." Each band lines up with one
-   * of the 4 examples in the spec.
+   * function of what PERCENTAGE of the day's tasks ended completed,
+   * not a fixed count. This generalizes correctly regardless of how
+   * many total categories exist (originally a fixed 4; now
+   * Workout + however many learning tracks are active). The floor is
+   * 40, never lower — "the goal is progress, not perfection."
+   *
+   * `categories` is the full list of category keys to score against
+   * (e.g. ['workout', 'python', 'english', 'startup', ...]) — passed
+   * in by the caller since this module doesn't know the registry.
    */
-  function computeRealityScore(dayTasks) {
-    const categories = ['workout', 'python', 'english', 'startup'];
+  function computeRealityScore(dayTasks, categories) {
+    const total = categories.length || 1;
     const completedCount = categories.filter(c => dayTasks[c] && dayTasks[c].status === 'completed').length;
+    const pct = completedCount / total;
 
-    if (completedCount === 4) return { score: 100, label: 'Fully Completed' };
-    if (completedCount === 3) return { score: 80, label: 'Recovery Completed' };
-    if (completedCount === 2) return { score: 60, label: 'Partial Recovery' };
+    if (pct >= 1) return { score: 100, label: 'Fully Completed' };
+    if (pct >= 0.75) return { score: 80, label: 'Recovery Completed' };
+    if (pct >= 0.5) return { score: 60, label: 'Partial Recovery' };
     return { score: 40, label: 'Minimal Progress' };
   }
 
   return {
-    RECOVERY_PRIORITY,
     WORKOUT_RECOVERY_MINUTES,
+    DEFAULT_TRACK_MINUTES,
     DEFAULTS,
     minutesForMode,
     computeAvailableTime,
@@ -624,69 +618,53 @@ const RecoveryEngine = (() => {
  * storage.js
  * ------------------------------------------------------------
  * Single access point for all LocalStorage reads/writes.
- * The shape defined in DEFAULT_STATE is the "data model" —
- * keep it flat and serializable so it maps cleanly onto
- * Django models later (Task, Plan, Mission, Streak, HistoryEntry, ...).
  *
- * Phase 2 added a Task API layer on top of the raw get/set
- * primitives: setTaskStatus, getCompletionStats, and
- * getRemainingMinutes are the entry points every view (Dashboard,
- * Daily Planner, and later Analytics) should use, so status
- * transitions and progress math live in exactly one place.
+ * ARCHITECTURE NOTE — Track Registry (schema v2):
+ * Earlier versions of this app hardcoded exactly 4 task categories
+ * (workout/python/english/startup) as constants sprinkled across
+ * this file, ui.js, and recoveryEngine.js. That meant "add a new
+ * learning track" was a code change, not a user-facing action. This
+ * version replaces that with a real registry: `state.tracks` holds
+ * every learning track (python/english/startup ship pre-seeded, and
+ * behave exactly as before), and everywhere that used to say
+ * "python, english, startup" now asks the registry instead. Workout
+ * stays a fixed, special-cased category — its data model (a weekday
+ * template) is fundamentally different from a sequential topic
+ * track, not just a different name.
  *
- * Phase 3 adds a Plan + Mission layer on top of that:
- *   - plans.python / plans.english store a parsed curriculum
- *     (weeks + a flat topic list) plus a cursor into it.
- *   - plans.workout stores a weekday -> session label map.
- *   - missions[date][category] is the concrete thing generated
- *     for that day from the plan at the time it was generated —
- *     a fixed snapshot (topic / workout label), NOT a live
- *     pointer. This is what lets a missed mission be rescheduled
- *     later (Phase 4's Recovery Planner) without losing track of
- *     which exact topic or session it was.
- *   - Mission completion still flows through setTaskStatus (one
- *     status system for all 4 daily tasks); this file just hooks
- *     into it to advance/roll back the plan's cursor when a
- *     plan-backed task's status changes.
+ * Layering, unchanged in spirit from earlier phases:
+ *   Tasks (daily status) -> Missions (frozen daily snapshot of a
+ *   plan's current item) -> Plans (uploaded curriculum/template) ->
+ *   History (append-only record) -> Recovery Sessions (a plan's
+ *   output). Recovery Engine math still lives entirely in
+ *   recoveryEngine.js as a pure function of its inputs; this file
+ *   only feeds it data (now including a dynamically-computed
+ *   priority order and category list) and saves the result.
  *
- * Phase 4 adds the Recovery Engine layer:
- *   - recoverySessions[date] is the generated evening plan for that
- *     day (work end time, energy level, the scheduled items, and
- *     what got deferred) — a record of what the Recovery Planner
- *     produced, kept separate from live task state.
- *   - A task can now enter the 'recovery_planned' status; entry.
- *     recoveryPlannedToday flags that a task passed through recovery
- *     at some point today (kept even after it's later completed, so
- *     Recovery Success Rate can be computed from it).
- *   - history[date].realityScore and history[date].review hold the
- *     Reality Score and the End-of-Day Review answers.
- *   - The actual scheduling math lives in recoveryEngine.js (pure,
- *     no storage/DOM) — this file only feeds it data and saves
- *     the result, which is what keeps the engine portable to a
- *     future Django backend without a rewrite.
+ * SCHEMA VERSIONING (new): `meta.version` now actually does
+ * something. `_runMigrations()` applies any migration whose version
+ * is newer than the stored state's version, in order, so a future
+ * schema change has a real, tested mechanism to build on instead of
+ * relying on `_mergeDefaults` alone (which only fills in missing
+ * keys — it can't transform existing data into a new shape).
  * ------------------------------------------------------------
  */
 
+const SCHEMA_VERSION = 2;
 const STORAGE_KEY = 'adaptiveOS.v1';
 
 // The only valid task statuses. Anything else passed to
 // setTaskStatus() is rejected rather than silently stored.
 const VALID_STATUSES = ['not_started', 'in_progress', 'completed', 'deferred', 'skipped', 'recovery_planned'];
 
-// The 3 task categories that can have an uploaded plan behind
-// them. 'startup' has no plan management (per spec) and keeps
-// behaving exactly as it did in Phase 1/2.
-const PLAN_CATEGORIES = ['python', 'english', 'workout'];
-
 const DEFAULT_STATE = {
   meta: {
     createdAt: null,
     lastOpenedAt: null,
-    version: 1
+    version: SCHEMA_VERSION
   },
 
-  // Local device lock (Phase: mobile + auth). Not a real account —
-  // there's no server. { name, pinHash, createdAt } once set up.
+  // Local device lock — a PIN gate, not a real account (no server).
   auth: null,
 
   settings: {
@@ -697,39 +675,40 @@ const DEFAULT_STATE = {
     targetSleepMinutes: 1350 // 10:30 PM, minutes since midnight
   },
 
-  // Core daily tasks. One entry per calendar day (YYYY-MM-DD).
-  // Each day holds the 4 core tasks in priority order.
+  // Track Registry — every learning track (sequential Week/Topic
+  // curriculum). Workout is NOT here; it's a fixed, structurally
+  // different category handled on its own throughout this file.
+  // python/english/startup ship pre-seeded so existing behavior
+  // (and existing users' data, keyed by these exact ids) keeps
+  // working unchanged.
+  tracks: {
+    python: { label: 'Python Learning', icon: 'λ', createdAt: null, archived: false },
+    english: { label: 'English Learning', icon: '✎', createdAt: null, archived: false },
+    startup: { label: 'Startup Learning', icon: '◆', createdAt: null, archived: false }
+  },
+
+  // Per-date task status. Keys are dynamic: 'workout' plus whatever
+  // learning tracks are currently active — NOT a fixed 4-key shape.
   tasks: {
     // '2026-07-11': {
-    //   workout:  { status: 'not_started', mode: 'standard', updatedAt: null, startedAt: null, completedAt: null },
-    //   python:   { status: 'not_started', mode: 'standard', updatedAt: null, startedAt: null, completedAt: null },
-    //   english:  { status: 'not_started', mode: 'standard', updatedAt: null, startedAt: null, completedAt: null },
-    //   startup:  { status: 'not_started', mode: 'standard', updatedAt: null, startedAt: null, completedAt: null }
+    //   workout:  { status: 'not_started', mode: 'standard', updatedAt: null, ... },
+    //   python:   { status: 'not_started', mode: 'standard', updatedAt: null, ... },
+    //   ... one entry per active track ...
     // }
   },
 
-  // Uploaded learning / workout plans (Phase 3).
-  // python / english: { raw, uploadedAt, weeks, flatTopics, cursorIndex, completedTopics }
-  // workout:          { raw, uploadedAt, days: { monday: '...', ..., sunday: 'Rest' } }
+  // Uploaded learning / workout plans.
+  // learning tracks: { raw, uploadedAt, weeks, flatTopics, cursorIndex, completedTopics }
+  // workout:         { raw, uploadedAt, days: { monday: {label, detail}, ..., sunday: {...} } }
   plans: {
-    python: null,
-    english: null,
     workout: null
+    // learning track plans are added dynamically, keyed by track id
   },
 
-  // Missions generated once per day per plan-backed category
-  // (Phase 3). Each is a frozen snapshot of what that day's task
-  // actually is — not a live reference to the plan — so a missed
-  // one can be identified and rescheduled later without the plan
-  // having moved on.
-  // '2026-07-11': {
-  //   python:  { type: 'topic', week: 1, topic: 'Variables', isComplete: false, generatedAt, advanced: false },
-  //   english: { type: 'topic', week: 1, topic: 'Vocabulary Building', isComplete: false, generatedAt, advanced: false },
-  //   workout: { type: 'workout', day: 'monday', label: 'Upper Body Strength', isRest: false, generatedAt, advanced: false }
-  // }
+  // Missions generated once per day per plan-backed category. Each
+  // is a frozen snapshot of what that day's task actually is.
   missions: {},
 
-  // Streaks
   streaks: {
     current: 0,
     longest: 0,
@@ -737,41 +716,64 @@ const DEFAULT_STATE = {
   },
 
   // Daily history — end-of-day review answers + completion snapshot.
-  // Written automatically whenever a task's status changes, so the
-  // Weekly Progress chart and later Analytics always have same-day data.
   history: {
     // '2026-07-11': {
-    //   completedPct: 75, completed: [], missed: [], deferred: [],
-    //   realityScore: { score: 80, label: 'Recovery Completed' } | null,
-    //   review: { completed: [], missed: [], reasons: { startup: 'low_energy' }, submittedAt } | null
+    //   completedPct, completed: [], missed: [], deferred: [],
+    //   realityScore: { score, label } | null,
+    //   review: { completed: [], missed: [], reasons: {...}, submittedAt } | null
     // }
   },
 
-  // Recovery sessions generated by the Recovery Planner (Phase 4).
-  // One record per day, kept separate from live task state — this
-  // is what the Recovery Dashboard Card reads to show "what the
-  // plan said" even after tasks have since moved on.
+  // Recovery sessions generated by the Recovery Planner. One record
+  // per day, kept separate from live task state.
   recoverySessions: {
     // '2026-07-11': {
-    //   workEndTime: '20:00', energyLevel: 'medium', includeWorkoutRecovery: false,
-    //   availableTime: { dinnerStart, dinnerEnd, recoveryStart, recoveryEnd, availableMinutes, cappedMinutes },
-    //   scheduled: [ { category: 'python', mode: 'minimum', minutes: 20, startMinutes, endMinutes } ],
-    //   deferred: ['startup'], workoutNeedsResume: true, generatedAt
+    //   workEndTime, energyLevel, includeWorkoutRecovery,
+    //   availableTime: {...}, scheduled: [...], deferred: [...],
+    //   workoutNeedsResume, generatedAt
     // }
-  },
-
-  // Rolled-up analytics (Phase 8) — recomputed from history/tasks
-  analytics: {
-    weeklyCompletion: [],
-    monthlyCompletion: null,
-    consistency: { workout: 0, python: 0, english: 0 },
-    recoveryUsagePct: 0
   }
 };
 
-const Storage = (() => {
+/**
+ * Schema migrations. Each entry's `migrate(state)` transforms state
+ * from the version just below it up to itself, and MUST be
+ * idempotent (safe to run on already-migrated data) since
+ * `_mergeDefaults` may have already filled in some of the same
+ * fields with defaults before a migration runs.
+ */
+const MIGRATIONS = [
+  {
+    version: 2,
+    description: 'Introduce the Learning Hub track registry and formal schema versioning.',
+    migrate(state) {
+      // _mergeDefaults already backfills `state.tracks` from
+      // DEFAULT_STATE if it was entirely absent (pre-v2 data never
+      // had this key), so this is mostly a safety net for the case
+      // where it exists but is empty for some other reason — plus
+      // establishing a real, tested example for future migrations
+      // to follow.
+      if (!state.tracks || Object.keys(state.tracks).length === 0) {
+        state.tracks = JSON.parse(JSON.stringify(DEFAULT_STATE.tracks));
+      }
+      return state;
+    }
+  }
+];
 
-  const TASK_ORDER = ['workout', 'python', 'english', 'startup'];
+function _runMigrations(state) {
+  const startVersion = (state.meta && state.meta.version) || 1;
+  MIGRATIONS
+    .filter(m => m.version > startVersion)
+    .sort((a, b) => a.version - b.version)
+    .forEach(m => {
+      state = m.migrate(state);
+      state.meta.version = m.version;
+    });
+  return state;
+}
+
+const Storage = (() => {
 
   function _read() {
     try {
@@ -798,19 +800,12 @@ const Storage = (() => {
    * Deep-merges stored data with DEFAULT_STATE so new fields added
    * in later versions don't clobber existing data.
    *
-   * CRITICAL FIX: the previous version of this function only ever
-   * copied keys that existed in `defaults` itself. That's correct
-   * for fixed-shape objects (settings, auth) but is destructive for
-   * every *dynamic dictionary* in this app's data model — tasks,
-   * missions, history, and recoverySessions are all keyed by date
-   * (or category), and DEFAULT_STATE necessarily has them start as
-   * `{}` with zero keys. The old code would recurse into that empty
-   * template and silently produce an empty result, discarding every
-   * date's actual data — on every single Storage.init() call, i.e.
-   * every time the app was opened. This version merges the *union*
-   * of keys from both `defaults` and `stored`, so keys that only
-   * exist in `stored` (a real date, a real category) are preserved
-   * as-is instead of being dropped.
+   * This merges the *union* of keys from both `defaults` and
+   * `stored` — a key that only exists in `stored` (a real date in
+   * `tasks`, a real category in `missions`) is preserved as-is
+   * instead of being dropped, which matters because DEFAULT_STATE's
+   * dynamic dictionaries (tasks/missions/history/recoverySessions)
+   * necessarily start as `{}` with zero keys of their own.
    */
   function _mergeDefaults(stored, defaults) {
     if (Array.isArray(defaults)) {
@@ -841,7 +836,8 @@ const Storage = (() => {
 
   function init() {
     const stored = _read();
-    const state = _mergeDefaults(stored || {}, DEFAULT_STATE);
+    let state = _mergeDefaults(stored || {}, DEFAULT_STATE);
+    state = _runMigrations(state);
     if (!state.meta.createdAt) state.meta.createdAt = new Date().toISOString();
     state.meta.lastOpenedAt = new Date().toISOString();
     _write(state);
@@ -856,7 +852,6 @@ const Storage = (() => {
     return _write(state);
   }
 
-  /** Convenience getter/setter for a dotted path, e.g. 'tasks.2026-07-11' */
   function get(path) {
     const state = getState();
     return path.split('.').reduce((acc, key) => (acc == null ? acc : acc[key]), state);
@@ -884,6 +879,82 @@ const Storage = (() => {
     return `${y}-${m}-${d}`;
   }
 
+  // ------------------------------------------------------------
+  // TRACK REGISTRY (Learning Hub)
+  // ------------------------------------------------------------
+
+  function _slugify(label) {
+    return label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+  }
+
+  /** Every track (active by default; pass true to include archived
+   *  ones too), as an array of { id, label, icon, createdAt, archived }. */
+  function getTracks(includeArchived = false) {
+    const tracks = getState().tracks || {};
+    return Object.entries(tracks)
+      .filter(([, t]) => includeArchived || !t.archived)
+      .map(([id, t]) => ({ id, ...t }));
+  }
+
+  function getActiveTrackIds() {
+    return getTracks(false).map(t => t.id);
+  }
+
+  /** Every plan-backed category — every active learning track, plus
+   *  'workout'. Replaces the old hardcoded PLAN_CATEGORIES constant. */
+  function getPlanCategories() {
+    return [...getActiveTrackIds(), 'workout'];
+  }
+
+  /** Adds a new learning track (or reactivates an archived one with
+   *  the same name). Returns the track's id, or null if the label
+   *  was empty. New tracks immediately get the full plan-upload /
+   *  mission / progress-tracking experience — no new code needed. */
+  function addTrack(label) {
+    const trimmed = (label || '').trim();
+    if (!trimmed) return null;
+    const id = _slugify(trimmed);
+    if (!id) return null;
+
+    const state = getState();
+    if (state.tracks[id]) {
+      state.tracks[id].archived = false;
+      state.tracks[id].label = trimmed;
+    } else {
+      state.tracks[id] = {
+        label: trimmed,
+        icon: '◆',
+        createdAt: new Date().toISOString(),
+        archived: false
+      };
+    }
+    setState(state);
+    return id;
+  }
+
+  /** Hides a track from the registry without deleting its data — its
+   *  plan, progress, and history all stay intact in case it's
+   *  restored later. */
+  function archiveTrack(trackId) {
+    const state = getState();
+    if (!state.tracks[trackId]) return false;
+    state.tracks[trackId].archived = true;
+    setState(state);
+    return true;
+  }
+
+  function restoreTrack(trackId) {
+    const state = getState();
+    if (!state.tracks[trackId]) return false;
+    state.tracks[trackId].archived = false;
+    setState(state);
+    return true;
+  }
+
+  // ------------------------------------------------------------
+  // TASK API
+  // ------------------------------------------------------------
+
   function _blankTaskEntry() {
     return {
       status: 'not_started',
@@ -898,40 +969,39 @@ const Storage = (() => {
     };
   }
 
-  /** Ensures a given day's task entry exists with the 4 core tasks.
-   *  Defaults to today; accepts a dateKey for future/past lookups. */
+  /** Ensures a date's task entry exists AND has a blank entry for
+   *  every currently-active category (workout + each active track).
+   *  Runs this check every call, not just on first creation — so a
+   *  track added after a date's entry already existed still gets a
+   *  blank slot for that date instead of silently having no status. */
   function ensureTasksFor(dateKey) {
     const state = getState();
-    if (!state.tasks[dateKey]) {
-      state.tasks[dateKey] = {
-        workout: _blankTaskEntry(),
-        python: _blankTaskEntry(),
-        english: _blankTaskEntry(),
-        startup: _blankTaskEntry()
-      };
-      setState(state);
-    }
+    if (!state.tasks[dateKey]) state.tasks[dateKey] = {};
+
+    const categories = getPlanCategories().includes('workout')
+      ? getPlanCategories()
+      : [...getPlanCategories(), 'workout'];
+    let changed = false;
+    categories.forEach(cat => {
+      if (!state.tasks[dateKey][cat]) {
+        state.tasks[dateKey][cat] = _blankTaskEntry();
+        changed = true;
+      }
+    });
+
+    if (changed) setState(state);
     return state.tasks[dateKey];
   }
 
-  /** Ensures today's task entry exists with the 4 core tasks. */
   function ensureTodayTasks() {
     return ensureTasksFor(todayKey());
   }
 
-  /** Reads a single task's record for a given day (defaults to today). */
   function getTask(taskKey, dateKey = todayKey()) {
     const dayTasks = ensureTasksFor(dateKey);
-    return dayTasks[taskKey] || null;
+    return dayTasks[taskKey] || _blankTaskEntry();
   }
 
-  /**
-   * Sets a task's status for a given day, stamping the relevant
-   * timestamp (startedAt / completedAt) and refreshing the day's
-   * history snapshot. This is the single write path every view
-   * should use — Dashboard quick actions and Daily Planner
-   * controls both call through here.
-   */
   function setTaskStatus(taskKey, status, dateKey = todayKey()) {
     if (!VALID_STATUSES.includes(status)) {
       console.error(`Invalid task status: "${status}"`);
@@ -939,16 +1009,10 @@ const Storage = (() => {
     }
 
     const state = getState();
-    if (!state.tasks[dateKey]) {
-      state.tasks[dateKey] = {
-        workout: _blankTaskEntry(),
-        python: _blankTaskEntry(),
-        english: _blankTaskEntry(),
-        startup: _blankTaskEntry()
-      };
-    }
+    ensureTasksFor(dateKey); // make sure every category has a slot first
+    const freshState = getState(); // ensureTasksFor may have just persisted new slots
 
-    const entry = state.tasks[dateKey][taskKey] || _blankTaskEntry();
+    const entry = freshState.tasks[dateKey][taskKey] || _blankTaskEntry();
     const prevStatus = entry.status;
     const now = new Date().toISOString();
 
@@ -959,16 +1023,15 @@ const Storage = (() => {
     if (status !== 'completed') entry.completedAt = null;
     if (status === 'recovery_planned') entry.recoveryPlannedToday = true;
 
-    state.tasks[dateKey][taskKey] = entry;
-    setState(state);
+    freshState.tasks[dateKey][taskKey] = entry;
+    setState(freshState);
 
-    _recordHistorySnapshot(dateKey, state.tasks[dateKey]);
+    _recordHistorySnapshot(dateKey, freshState.tasks[dateKey]);
 
     // Plan-backed categories: advance the curriculum/session cursor
     // when a mission is completed, and roll it back if that
-    // completion is undone — so the plan's progress always matches
-    // what's actually been marked done.
-    if (PLAN_CATEGORIES.includes(taskKey)) {
+    // completion is undone.
+    if (getPlanCategories().includes(taskKey)) {
       generateMissionsFor(dateKey);
       if (status === 'completed' && prevStatus !== 'completed') {
         _advancePlanCursor(taskKey, dateKey);
@@ -982,51 +1045,44 @@ const Storage = (() => {
     return entry;
   }
 
-  /** Sets a task's Smart Task Mode (minimum / standard / extended). */
   function setTaskMode(taskKey, mode, dateKey = todayKey()) {
     const state = getState();
-    const dayTasks = state.tasks[dateKey] || ensureTasksFor(dateKey);
-    dayTasks[taskKey].mode = mode;
-    dayTasks[taskKey].updatedAt = new Date().toISOString();
-    state.tasks[dateKey] = dayTasks;
-    setState(state);
-    return dayTasks[taskKey];
+    ensureTasksFor(dateKey);
+    const freshState = getState();
+    const entry = freshState.tasks[dateKey][taskKey] || _blankTaskEntry();
+    entry.mode = mode;
+    freshState.tasks[dateKey][taskKey] = entry;
+    setState(freshState);
+    return entry;
   }
 
-  /** { completed, total, pct } for a given day (defaults to today). */
   function getCompletionStats(dateKey = todayKey()) {
     const dayTasks = ensureTasksFor(dateKey);
-    const completed = TASK_ORDER.filter(k => dayTasks[k].status === 'completed').length;
-    const total = TASK_ORDER.length;
-    const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
-    return { completed, total, pct };
+    const categories = Object.keys(dayTasks);
+    const completed = categories.filter(k => dayTasks[k].status === 'completed').length;
+    const total = categories.length;
+    return { completed, total, pct: total === 0 ? 0 : Math.round((completed / total) * 100) };
   }
 
-  /**
-   * Remaining work estimate, in minutes, for a given day.
-   * Counts tasks that are not yet completed and not skipped —
-   * deferred tasks still count, since they still need to happen.
-   * Requires UI.estimateMinutes (loaded before this is called).
-   */
   function getRemainingMinutes(dateKey = todayKey()) {
     const dayTasks = ensureTasksFor(dateKey);
-    return TASK_ORDER.reduce((sum, key) => {
+    let minutes = 0;
+    Object.keys(dayTasks).forEach(key => {
       const task = dayTasks[key];
-      if (task.status === 'completed' || task.status === 'skipped') return sum;
-      const minutes = (typeof UI !== 'undefined') ? UI.estimateMinutes(key, task.mode) : 0;
-      return sum + minutes;
-    }, 0);
+      if (task.status === 'completed' || task.status === 'skipped') return;
+      minutes += (typeof UI !== 'undefined') ? UI.estimateMinutes(key, task.mode) : 0;
+    });
+    return minutes;
   }
 
   // ------------------------------------------------------------
-  // PLAN API (Phase 3)
+  // PLAN API
   // ------------------------------------------------------------
 
   /** Parses and stores a pasted plan for a category, replacing
-   *  whatever was there before. Progress (cursor/completed topics)
-   *  restarts with the new plan — a fresh upload is a fresh start. */
+   *  whatever was there before. Progress restarts with the new plan. */
   function savePlan(category, rawText) {
-    if (!PLAN_CATEGORIES.includes(category)) {
+    if (!getPlanCategories().includes(category)) {
       console.error(`Unknown plan category: "${category}"`);
       return null;
     }
@@ -1052,9 +1108,6 @@ const Storage = (() => {
       };
     }
 
-    // Drop any already-generated mission for today in this
-    // category so the new plan takes effect immediately rather
-    // than waiting for tomorrow.
     const today = todayKey();
     if (state.missions[today]) delete state.missions[today][category];
 
@@ -1072,14 +1125,13 @@ const Storage = (() => {
   }
 
   // ------------------------------------------------------------
-  // MISSION API (Phase 3)
+  // MISSION API
   // ------------------------------------------------------------
 
   /** Normalizes a workout day entry to { label, detail } regardless
    *  of whether it was saved before or after detail-tracking was
    *  added — plans uploaded under the old format stored a bare
-   *  string per day, and there's no reason to force a re-upload
-   *  just to keep reading them correctly. */
+   *  string per day. */
   function _normalizeWorkoutDay(entry) {
     if (typeof entry === 'string') return { label: entry, detail: [] };
     return entry || { label: 'Rest', detail: [] };
@@ -1087,15 +1139,14 @@ const Storage = (() => {
 
   /** Ensures today's (or a given day's) mission exists for every
    *  plan-backed category that has a plan uploaded. Idempotent —
-   *  safe to call from every view's render(). This is the "Daily
-   *  Mission Generator": it runs whenever the app is looked at,
-   *  which covers "every morning" without needing a background
-   *  scheduler in a LocalStorage-only app. */
+   *  safe to call from every view's render(). Always persists, even
+   *  if nothing changed this call, so a fresh read immediately
+   *  afterward never finds missions[dateKey] missing entirely. */
   function generateMissionsFor(dateKey = todayKey()) {
     const state = getState();
     if (!state.missions[dateKey]) state.missions[dateKey] = {};
 
-    PLAN_CATEGORIES.forEach(category => {
+    getPlanCategories().forEach(category => {
       if (state.missions[dateKey][category]) return; // already generated
       const plan = state.plans[category];
       if (!plan) return; // nothing uploaded yet
@@ -1127,29 +1178,15 @@ const Storage = (() => {
       }
     });
 
-    // Always persist, even if nothing changed this call — the empty
-    // `state.missions[dateKey] = {}` initialization above still
-    // needs to be saved. A previous version of this function only
-    // called setState() when something actually changed, which
-    // meant a fresh read via getState() immediately afterward could
-    // find missions[dateKey] completely missing (e.g. before any
-    // plan has ever been uploaded) and throw when a caller indexed
-    // straight into it.
     setState(state);
     return state.missions[dateKey];
   }
 
-  /** Reads (generating first if needed) a single day's mission for a category. */
   function getMission(category, dateKey = todayKey()) {
     const missionsForDay = generateMissionsFor(dateKey);
     return missionsForDay[category] || null;
   }
 
-  /** Moves a topic plan's cursor forward and records the topic as
-   *  completed. No-ops for workout (nothing to advance — its
-   *  schedule is a fixed weekly template) beyond flagging the
-   *  mission itself. Guarded by mission.advanced so re-completing
-   *  an already-completed mission never double-advances. */
   function _advancePlanCursor(category, dateKey) {
     const state = getState();
     const mission = state.missions[dateKey] && state.missions[dateKey][category];
@@ -1168,9 +1205,6 @@ const Storage = (() => {
     setState(state);
   }
 
-  /** Reverses _advancePlanCursor — used when a completed mission
-   *  is undone, so the cursor doesn't silently drift ahead of
-   *  what's actually been done. */
   function _rollbackPlanCursor(category, dateKey) {
     const state = getState();
     const mission = state.missions[dateKey] && state.missions[dateKey][category];
@@ -1189,9 +1223,6 @@ const Storage = (() => {
     setState(state);
   }
 
-  /** Current Topic / Completed / Remaining / Progress % for a
-   *  topic-based plan (python or english). Returns null if no
-   *  plan has been uploaded yet. */
   function getTopicPlanProgress(category) {
     const plan = getPlan(category);
     if (!plan) return null;
@@ -1207,16 +1238,12 @@ const Storage = (() => {
       completed,
       remaining,
       pct,
-      currentTopic: plan.flatTopics[cursorIdx] || null, // null once the plan is finished
+      currentTopic: plan.flatTopics[cursorIdx] || null,
       remainingTopics: plan.flatTopics.slice(cursorIdx),
       completedTopics: plan.completedTopics
     };
   }
 
-  /** Today's Workout / Completed Sessions / Missed Sessions /
-   *  Weekly Consistency %, computed from the last 7 calendar days
-   *  against the uploaded weekday template. Returns hasPlan:false
-   *  if no workout plan has been uploaded yet. */
   function getWorkoutStats() {
     const plan = getPlan('workout');
     const stats = {
@@ -1258,15 +1285,13 @@ const Storage = (() => {
     stats.consistencyPct = stats.scheduled === 0 ? 0 : Math.round((stats.completed / stats.scheduled) * 100);
 
     // "Missed This Week" — tracked against the actual calendar week
-    // (Monday–Sunday containing today), not the rolling 7-day window
-    // above. Per design: missing a day never reschedules anything —
-    // this is purely visibility into what slipped, for this specific
-    // week, so nothing quietly disappears.
-    const dayOfWeekMon0 = (today.getDay() + 6) % 7; // 0=Monday...6=Sunday
+    // (Monday–Sunday containing today). Missing a day never
+    // reschedules anything — this is purely visibility.
+    const dayOfWeekMon0 = (today.getDay() + 6) % 7;
     const monday = new Date(today);
     monday.setDate(today.getDate() - dayOfWeekMon0);
 
-    for (let i = 0; i < dayOfWeekMon0; i++) { // strictly *before* today only
+    for (let i = 0; i < dayOfWeekMon0; i++) {
       const d = new Date(monday);
       d.setDate(monday.getDate() + i);
       const dKey = todayKey(d);
@@ -1285,19 +1310,18 @@ const Storage = (() => {
   }
 
   // ------------------------------------------------------------
-  // RECOVERY ENGINE API (Phase 4)
+  // RECOVERY ENGINE API
   // ------------------------------------------------------------
 
-  /**
-   * Runs the Recovery Algorithm and applies its result: schedules
-   * whatever fits into 'recovery_planned' (with its assigned mode),
-   * defers whatever doesn't, and saves the whole session so the
-   * Recovery Planner and Dashboard can both display it.
-   *
-   * Workout is only a candidate if includeWorkoutRecovery is true —
-   * otherwise it's left exactly as it was; "Resume Tomorrow" is a
-   * display-only message (workoutNeedsResume), never a forced status.
-   */
+  /** Recovery priority order: every active learning track (in
+   *  registry order), then 'workout' last — the reverse of the
+   *  morning order, and workout only ever gets recovered if
+   *  explicitly opted in. Computed fresh from the live registry on
+   *  every call instead of a fixed constant. */
+  function getRecoveryPriority() {
+    return [...getActiveTrackIds(), 'workout'];
+  }
+
   function generateRecoveryPlan(input, dateKey = todayKey()) {
     const { workEndTime, energyLevel = 'medium', includeWorkoutRecovery = false } = input || {};
     if (!workEndTime) {
@@ -1319,27 +1343,20 @@ const Storage = (() => {
       targetSleepMinutes: s.targetSleepMinutes
     });
     const cappedMinutes = Math.min(availableTime.availableMinutes, s.eveningRecoveryLimitMinutes);
-    // The displayed "Available" time is the full window; scheduling
-    // itself works off a slightly smaller budget (see DEFAULTS.
-    // transitionBufferMinutes) so the plan doesn't run right up to
-    // Wind Down.
     const schedulingBudget = Math.max(0, cappedMinutes - RecoveryEngine.DEFAULTS.transitionBufferMinutes);
 
     const dayTasks = ensureTasksFor(dateKey);
-    const candidateCategories = ['python', 'english', 'startup'];
+    const candidateCategories = [...getActiveTrackIds()];
     if (includeWorkoutRecovery) candidateCategories.push('workout');
 
-    // Respect an explicit Skip — that's the user's deliberate call,
-    // not something the engine should override. Everything else
-    // unfinished (not started, in progress, deferred, or already
-    // recovery_planned from an earlier generation) is a candidate.
     const candidates = candidateCategories.filter(c => {
-      const status = dayTasks[c].status;
+      const status = dayTasks[c] ? dayTasks[c].status : 'not_started';
       return status !== 'completed' && status !== 'skipped';
     });
 
     const result = RecoveryEngine.buildRecoveryPlan({
       candidates,
+      priorityOrder: getRecoveryPriority(),
       availableMinutes: schedulingBudget,
       recoveryStartMinutes: availableTime.recoveryStart,
       energyLevel
@@ -1377,43 +1394,39 @@ const Storage = (() => {
     return getState().recoverySessions[dateKey] || null;
   }
 
-  /** Recomputes and stores today's (or a given day's) Reality Score.
-   *  Called after every status change and after generating a plan,
-   *  so the Dashboard's Recovery Card is never stale. */
   function _refreshRealityScore(dateKey) {
     if (typeof RecoveryEngine === 'undefined') return;
     const state = getState();
     const dayTasks = state.tasks[dateKey];
     if (!dayTasks) return;
+    const categories = ['workout', ...getActiveTrackIds()];
     state.history[dateKey] = {
       ...(state.history[dateKey] || {}),
-      realityScore: RecoveryEngine.computeRealityScore(dayTasks)
+      realityScore: RecoveryEngine.computeRealityScore(dayTasks, categories)
     };
     setState(state);
   }
 
-  /** { score, label } for a given day (defaults to today). Computes
-   *  on demand if nothing has changed status yet today. */
   function getRealityScore(dateKey = todayKey()) {
     const entry = getState().history[dateKey];
     if (entry && entry.realityScore) return entry.realityScore;
     const dayTasks = ensureTasksFor(dateKey);
+    const categories = ['workout', ...getActiveTrackIds()];
     return (typeof RecoveryEngine !== 'undefined')
-      ? RecoveryEngine.computeRealityScore(dayTasks)
+      ? RecoveryEngine.computeRealityScore(dayTasks, categories)
       : { score: 40, label: 'Minimal Progress' };
   }
 
   // ------------------------------------------------------------
-  // END-OF-DAY REVIEW API (Phase 4)
+  // END-OF-DAY REVIEW API
   // ------------------------------------------------------------
 
-  /** Stores the End-of-Day Review: what got missed and why, keyed
-   *  by category. `reasons` looks like { startup: 'low_energy' }. */
   function submitEndOfDayReview(reasons, dateKey = todayKey()) {
     const state = getState();
     const dayTasks = state.tasks[dateKey] || {};
-    const completed = TASK_ORDER.filter(k => dayTasks[k] && dayTasks[k].status === 'completed');
-    const missed = TASK_ORDER.filter(k => dayTasks[k] && dayTasks[k].status !== 'completed');
+    const categories = Object.keys(dayTasks);
+    const completed = categories.filter(k => dayTasks[k].status === 'completed');
+    const missed = categories.filter(k => dayTasks[k].status !== 'completed');
 
     state.history[dateKey] = {
       ...(state.history[dateKey] || {}),
@@ -1435,14 +1448,9 @@ const Storage = (() => {
   }
 
   // ------------------------------------------------------------
-  // DEFERRED TASK SYSTEM (Phase 4)
+  // DEFERRED TASK SYSTEM
   // ------------------------------------------------------------
 
-  /** Today's deferred count plus a rolling deferred history (with
-   *  a reason if an End-of-Day Review supplied one), scanning the
-   *  last `daysBack` days of `history`. Deferred tasks are never
-   *  deleted — they're read straight from the same history entries
-   *  the Weekly Progress chart already relies on. */
   function getDeferredSummary(daysBack = 14) {
     const state = getState();
     let todayCount = 0;
@@ -1466,13 +1474,9 @@ const Storage = (() => {
   }
 
   // ------------------------------------------------------------
-  // RECOVERY ANALYTICS READER (Phase 4 — feeds the future Analytics page)
+  // RECOVERY ANALYTICS + INSIGHTS AGGREGATES
   // ------------------------------------------------------------
 
-  /** Recovery Sessions count, Deferred Tasks count, Recovery Success
-   *  Rate, and a Weekly Recovery Trend — all derived on the fly from
-   *  existing history/tasks/recoverySessions, so there's no separate
-   *  aggregate table to keep in sync. */
   function getRecoveryAnalytics(daysBack = 7) {
     const state = getState();
     const weeklyTrend = [];
@@ -1480,6 +1484,7 @@ const Storage = (() => {
     let deferredTasksCount = 0;
     let recoveryAttempted = 0;
     let recoverySucceeded = 0;
+    const allCategories = ['workout', ...getActiveTrackIds()];
 
     for (let i = daysBack - 1; i >= 0; i--) {
       const d = new Date();
@@ -1496,7 +1501,7 @@ const Storage = (() => {
 
       const dayTasks = state.tasks[dKey];
       if (dayTasks) {
-        TASK_ORDER.forEach(k => {
+        allCategories.forEach(k => {
           if (dayTasks[k] && dayTasks[k].recoveryPlannedToday) {
             recoveryAttempted += 1;
             if (dayTasks[k].status === 'completed') recoverySucceeded += 1;
@@ -1512,14 +1517,6 @@ const Storage = (() => {
     return { recoverySessionsCount, deferredTasksCount, recoverySuccessRatePct, weeklyTrend };
   }
 
-  // ------------------------------------------------------------
-  // INSIGHTS AGGREGATES (feeds the Insights page — all derived
-  // on the fly from data already being collected; nothing new is
-  // stored just to support this)
-  // ------------------------------------------------------------
-
-  /** How many topics per active day a topic-based plan (python or
-   *  english) is moving at, plus a naive finish-date projection. */
   function getLearningVelocity(category, daysBack = 30) {
     const plan = getPlan(category);
     if (!plan) return null;
@@ -1548,9 +1545,6 @@ const Storage = (() => {
     return { perActiveDay, activeDays, remaining, projectedDays };
   }
 
-  /** What hour-of-day a category tends to get completed at, and how
-   *  often it happens before 7 PM vs after 9 PM — both computed from
-   *  completedAt timestamps that are already stored on every task. */
   function getPeakProductivityWindow(category, daysBack = 30) {
     const state = getState();
     let total = 0;
@@ -1578,11 +1572,9 @@ const Storage = (() => {
     };
   }
 
-  /** Which End-of-Day Review reason shows up most often for a
-   *  category, across all recorded history. */
   function getMissedTaskCauses(daysBack = 60) {
     const state = getState();
-    const counts = {}; // { category: { reason: count } }
+    const counts = {};
 
     for (let i = 0; i < daysBack; i++) {
       const d = new Date();
@@ -1606,20 +1598,13 @@ const Storage = (() => {
   }
 
   // ------------------------------------------------------------
-  // EXPORT / IMPORT (Settings) — the single highest-leverage fix
-  // for the "no backup, total loss on device/browser loss" gap.
+  // EXPORT / IMPORT
   // ------------------------------------------------------------
 
-  /** Returns the entire app state as a pretty-printed JSON string,
-   *  ready to be saved as a .json file. */
   function exportDataAsJSON() {
     return JSON.stringify(getState(), null, 2);
   }
 
-  /** Parses a previously-exported JSON string and merges it in
-   *  using the same forward-compatible merge init() already uses,
-   *  so an export from an older version of the app still loads
-   *  cleanly against today's schema. Returns { ok, error? }. */
   function importDataFromJSON(jsonText) {
     let parsed;
     try {
@@ -1630,21 +1615,23 @@ const Storage = (() => {
     if (!parsed || typeof parsed !== 'object' || !parsed.tasks || !parsed.settings) {
       return { ok: false, error: 'That doesn\u2019t look like an Adaptive OS export.' };
     }
-    const merged = _mergeDefaults(parsed, DEFAULT_STATE);
+    let merged = _mergeDefaults(parsed, DEFAULT_STATE);
+    merged = _runMigrations(merged);
     setState(merged);
     return { ok: true };
   }
 
   function _recordHistorySnapshot(dateKey, dayTasks) {
     const state = getState();
-    const completed = TASK_ORDER.filter(k => dayTasks[k].status === 'completed');
-    const deferred = TASK_ORDER.filter(k => dayTasks[k].status === 'deferred');
-    const missed = TASK_ORDER.filter(k => dayTasks[k].status === 'skipped');
-    const pct = Math.round((completed.length / TASK_ORDER.length) * 100);
+    const categories = Object.keys(dayTasks);
+    const completed = categories.filter(k => dayTasks[k].status === 'completed');
+    const deferred = categories.filter(k => dayTasks[k].status === 'deferred');
+    const missed = categories.filter(k => dayTasks[k].status === 'skipped');
+    const completedPct = categories.length === 0 ? 0 : Math.round((completed.length / categories.length) * 100);
 
     state.history[dateKey] = {
       ...(state.history[dateKey] || {}),
-      completedPct: pct,
+      completedPct,
       completed,
       deferred,
       missed
@@ -1653,14 +1640,20 @@ const Storage = (() => {
   }
 
   return {
+    SCHEMA_VERSION,
     VALID_STATUSES,
-    PLAN_CATEGORIES,
     init,
     getState,
     setState,
     get,
     set,
     todayKey,
+    getTracks,
+    getActiveTrackIds,
+    getPlanCategories,
+    addTrack,
+    archiveTrack,
+    restoreTrack,
     ensureTasksFor,
     ensureTodayTasks,
     getTask,
@@ -1675,6 +1668,7 @@ const Storage = (() => {
     getMission,
     getTopicPlanProgress,
     getWorkoutStats,
+    getRecoveryPriority,
     generateRecoveryPlan,
     getRecoverySession,
     getRealityScore,
@@ -1698,28 +1692,19 @@ const Storage = (() => {
  * A local device lock — NOT a real account system. There is no
  * server here to check credentials against, so "authentication"
  * means: a PIN gate on top of the same LocalStorage data the rest
- * of the app already uses. It stops someone picking up your phone
- * and opening the app; it is not cryptographic security.
+ * of the app already uses.
  *
  * The PIN is stored as a simple non-reversible hash (not a proper
  * crypto hash — Web Crypto's subtle.digest requires a "secure
  * context," which file:// pages don't reliably get across every
- * mobile browser, and this file is meant to be opened directly as
- * a single file). That tradeoff is intentional: portability over
+ * mobile browser). That tradeoff is intentional: portability over
  * cryptographic strength, appropriate for a personal single-user
  * lock rather than a real login.
- *
- * State lives in Storage under the 'auth' key: { name, pinHash,
- * createdAt }. Unlock status for the current browser session is
- * separate, in sessionStorage, so re-opening the same tab doesn't
- * re-prompt, but fully closing the browser does.
  * ------------------------------------------------------------
  */
 
 const Auth = (() => {
   const SESSION_KEY = 'adaptiveOS.unlocked';
-  // A fixed salt. This adds only mild obfuscation, not real
-  // security — see the file header above.
   const SALT = 'adaptive-os-local-lock-v1';
 
   function hashPin(pin) {
@@ -1789,9 +1774,8 @@ const Auth = (() => {
    *  since there's no server to verify identity against. Wipes
    *  every bit of app data, AND the service worker's cache and
    *  registration — clearing only localStorage/sessionStorage was
-   *  a real bug: it reset your data but left a stale, possibly
-   *  outdated cached copy of the app itself still in control,
-   *  which could make "start fresh" not actually load fresh code. */
+   *  a real bug: it reset data but left a stale, possibly outdated
+   *  cached copy of the app itself still in control. */
   async function resetEverything() {
     localStorage.clear();
     sessionStorage.clear();
@@ -1880,8 +1864,6 @@ const Auth = (() => {
     });
   }
 
-  /** Decides what the overlay should show right now, without
-   *  assuming anything about prior state. Safe to call anytime. */
   function render() {
     if (!isSetUp()) {
       showSetupForm();
@@ -1907,34 +1889,56 @@ const Auth = (() => {
  * ui.js
  * ------------------------------------------------------------
  * Shared, presentation-only helpers used by every page module.
- * No storage access here — keep this layer purely about
- * formatting and small DOM utilities.
+ * No storage access here beyond reading the track registry to
+ * keep TASK_ORDER/TASK_META/TASK_MODE_MINUTES in sync — the actual
+ * data lives in storage.js.
+ *
+ * TASK_ORDER / TASK_META / TASK_MODE_MINUTES used to be hardcoded
+ * constants (workout/python/english/startup, fixed). They're now
+ * mutable objects rebuilt from the live track registry via
+ * refreshTaskRegistry() — called on init and after any track is
+ * added/archived/restored — so every existing consumer
+ * (`UI.TASK_META[key].label`, `UI.TASK_ORDER.forEach(...)`, etc.)
+ * keeps working completely unchanged while the underlying data
+ * becomes dynamic. This is what lets a user-added learning track
+ * slot into the Dashboard, Planner, and Recovery Engine without
+ * any of those files needing to change.
  * ------------------------------------------------------------
  */
 
 const UI = (() => {
 
-  // Canonical priority order for the 4 core daily tasks.
-  // Both the Dashboard and the Daily Planner read from this
-  // single source so the ordering never drifts between views.
-  const TASK_ORDER = ['workout', 'python', 'english', 'startup'];
-
-  const TASK_META = {
-    workout: { label: 'Workout', icon: '↯' },
-    python: { label: 'Python Learning', icon: 'λ' },
-    english: { label: 'English Learning', icon: '✎' },
-    startup: { label: 'Startup Learning', icon: '◆' }
-  };
-
-  // Smart Task Mode durations (minutes), from the product spec.
-  // Workout has a single fixed block (no minimum/extended modes
-  // defined yet — that arrives with the Recovery Planner).
-  const TASK_MODE_MINUTES = {
-    workout: { standard: 80 },
+  const WORKOUT_META = { label: 'Workout', icon: '↯' };
+  // Fallback mode-minutes for a newly-added track that hasn't been
+  // individually tuned — Python/English keep their original values.
+  const TRACK_MODE_DEFAULTS = { minimum: 15, standard: 30, extended: 45 };
+  const LEGACY_TRACK_MODE_MINUTES = {
     python: { minimum: 20, standard: 45, extended: 60 },
-    english: { minimum: 10, standard: 20, extended: 30 },
-    startup: { minimum: 15, standard: 30, extended: 45 }
+    english: { minimum: 10, standard: 20, extended: 30 }
   };
+
+  let TASK_ORDER = ['workout'];
+  let TASK_META = { workout: WORKOUT_META };
+  let TASK_MODE_MINUTES = { workout: { standard: 80 } };
+
+  /** Rebuilds TASK_ORDER/TASK_META/TASK_MODE_MINUTES from the live
+   *  track registry. Call this on app init and any time a track is
+   *  added, archived, or restored. */
+  function refreshTaskRegistry() {
+    const tracks = (typeof Storage !== 'undefined') ? Storage.getTracks() : [];
+
+    TASK_ORDER = ['workout', ...tracks.map(t => t.id)];
+
+    TASK_META = { workout: WORKOUT_META };
+    tracks.forEach(t => {
+      TASK_META[t.id] = { label: t.label, icon: t.icon || '◆' };
+    });
+
+    TASK_MODE_MINUTES = { workout: { standard: 80 } };
+    tracks.forEach(t => {
+      TASK_MODE_MINUTES[t.id] = LEGACY_TRACK_MODE_MINUTES[t.id] || { ...TRACK_MODE_DEFAULTS };
+    });
+  }
 
   const STATUS_LABEL = {
     not_started: 'Not started',
@@ -1947,9 +1951,8 @@ const UI = (() => {
 
   // Which statuses can move to which next status, and what each
   // transition button is labeled. This is the single "task status
-  // system" table — Planner, Python, English, Workout, and the
-  // Recovery Planner all render their buttons from this one source
-  // instead of each defining their own.
+  // system" table — every page renders its buttons from this one
+  // source instead of each defining their own.
   const TRANSITIONS = {
     not_started: [
       { to: 'in_progress', label: 'Start', variant: 'primary' },
@@ -1973,10 +1976,6 @@ const UI = (() => {
       { to: 'in_progress', label: 'Start', variant: 'primary' },
       { to: 'not_started', label: 'Undo', variant: 'text' }
     ],
-    // A task lands here only via the Recovery Planner's algorithm
-    // (or a regeneration of it) — from here it behaves like any
-    // other in-flight task: it can be started, finished, skipped,
-    // or undone back to not_started.
     recovery_planned: [
       { to: 'in_progress', label: 'Start', variant: 'primary' },
       { to: 'completed', label: 'Complete', variant: 'green' },
@@ -1994,79 +1993,6 @@ const UI = (() => {
     recovery_planned: 'is-recovery'
   };
 
-  /** HTML for the status-transition buttons valid from the given status. */
-  function renderActionButtonsHTML(taskKey, status) {
-    const transitions = TRANSITIONS[status] || [];
-    return transitions.map(t => `
-      <button class="action-btn action-btn--${t.variant}" data-task="${taskKey}" data-to="${t.to}">
-        ${t.label}
-      </button>
-    `).join('');
-  }
-
-  /**
-   * Wires up every `.action-btn` inside `container` to call
-   * `onTransition(nextStatus)`. Each caller decides what actually
-   * happens on a transition (usually Storage.setTaskStatus + a re-render).
-   */
-  function bindActionButtons(container, onTransition) {
-    container.querySelectorAll('.action-btn').forEach(btn => {
-      btn.addEventListener('click', () => onTransition(btn.dataset.to));
-    });
-  }
-
-  /** HTML for a Minimum/Standard/Extended segmented control. Returns
-   *  '' when a task (like Workout) only has one mode defined. */
-  function renderModeSelectorHTML(taskKey, task) {
-    const modes = Object.keys(TASK_MODE_MINUTES[taskKey] || {});
-    if (modes.length <= 1) return '';
-
-    const isLocked = task.status === 'completed' || task.status === 'skipped';
-    const buttons = modes.map(mode => `
-      <button
-        class="mode-btn ${task.mode === mode ? 'is-active' : ''}"
-        data-mode="${mode}"
-        ${isLocked ? 'disabled' : ''}
-      >${mode}</button>
-    `).join('');
-
-    return `<div class="mode-selector" data-task="${taskKey}">${buttons}</div>`;
-  }
-
-  /** Wires up every `.mode-btn` inside `container` to call `onModeChange(mode)`. */
-  function bindModeSelector(container, onModeChange) {
-    const el = container.querySelector('.mode-selector');
-    if (!el) return;
-    el.querySelectorAll('.mode-btn').forEach(btn => {
-      btn.addEventListener('click', () => onModeChange(btn.dataset.mode));
-    });
-  }
-
-  /** Renders a workout mission's structured detail (muscle-group
-   *  headers + exercise lists) as HTML. Shared by the Fitness page
-   *  and the Today Hero card so both expand identically instead of
-   *  each having their own copy of this markup. */
-  function renderWorkoutDetailGroups(groups) {
-    if (!groups || groups.length === 0) {
-      return '<p class="workout-detail__empty">No exercise breakdown for this session.</p>';
-    }
-    return groups.map(g => `
-      <div class="workout-detail__group">
-        ${g.group ? `<h3 class="workout-detail__group-title">${g.group}</h3>` : ''}
-        <ul class="workout-detail__exercises">
-          ${g.exercises.map(ex => `<li>${ex}</li>`).join('')}
-        </ul>
-      </div>
-    `).join('');
-  }
-
-  /** Estimated minutes for a task at a given mode, falling back
-   *  to that task's standard mode if the requested one isn't defined. */
-  function estimateMinutes(taskKey, mode) {
-    const modes = TASK_MODE_MINUTES[taskKey] || {};
-    return modes[mode] ?? modes.standard ?? 0;
-  }
-
   function formatTime(date = new Date()) {
     let h = date.getHours();
     const m = String(date.getMinutes()).padStart(2, '0');
@@ -2076,31 +2002,25 @@ const UI = (() => {
   }
 
   function formatDate(date = new Date()) {
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric'
-    });
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   }
 
   function dayOfWeek(date = new Date()) {
     return date.toLocaleDateString('en-US', { weekday: 'long' });
   }
 
-  /** Minutes since midnight, for comparing against schedule blocks. */
   function minutesNow(date = new Date()) {
     return date.getHours() * 60 + date.getMinutes();
   }
 
   function timeStrToMinutes(str) {
-    // '06:30' -> 390
     const [h, m] = str.split(':').map(Number);
     return h * 60 + m;
   }
 
   /** Inverse of timeStrToMinutes, for display: 510 -> '8:30 AM'. */
   function minutesToClockLabel(totalMinutes) {
-    const wrapped = ((totalMinutes % 1440) + 1440) % 1440; // guard against >24h or negative
+    const wrapped = ((totalMinutes % 1440) + 1440) % 1440;
     const h24 = Math.floor(wrapped / 60);
     const m = String(wrapped % 60).padStart(2, '0');
     const ampm = h24 >= 12 ? 'PM' : 'AM';
@@ -2115,7 +2035,6 @@ const UI = (() => {
     return node;
   }
 
-  /** Lightweight toast — used for quick-action confirmations. */
   let toastTimer = null;
   function toast(message) {
     let node = document.getElementById('osToast');
@@ -2137,10 +2056,74 @@ const UI = (() => {
     toastTimer = setTimeout(() => { node.style.opacity = '0'; }, 2200);
   }
 
+  /** Estimated minutes for a task at a given mode, falling back
+   *  to that task's standard mode if the requested one isn't defined. */
+  function estimateMinutes(taskKey, mode) {
+    const modes = TASK_MODE_MINUTES[taskKey] || {};
+    return modes[mode] ?? modes.standard ?? 0;
+  }
+
+  function renderActionButtonsHTML(taskKey, status) {
+    const transitions = TRANSITIONS[status] || [];
+    return transitions.map(t => `
+      <button class="action-btn action-btn--${t.variant}" data-task="${taskKey}" data-to="${t.to}">
+        ${t.label}
+      </button>
+    `).join('');
+  }
+
+  function bindActionButtons(container, onTransition) {
+    container.querySelectorAll('.action-btn').forEach(btn => {
+      btn.addEventListener('click', () => onTransition(btn.dataset.to));
+    });
+  }
+
+  function renderModeSelectorHTML(taskKey, task) {
+    const modes = Object.keys(TASK_MODE_MINUTES[taskKey] || {});
+    if (modes.length <= 1) return '';
+
+    const isLocked = task.status === 'completed' || task.status === 'skipped';
+    const buttons = modes.map(mode => `
+      <button
+        class="mode-btn ${task.mode === mode ? 'is-active' : ''}"
+        data-mode="${mode}"
+        ${isLocked ? 'disabled' : ''}
+      >${mode}</button>
+    `).join('');
+
+    return `<div class="mode-selector" data-task="${taskKey}">${buttons}</div>`;
+  }
+
+  function bindModeSelector(container, onModeChange) {
+    const el = container.querySelector('.mode-selector');
+    if (!el) return;
+    el.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => onModeChange(btn.dataset.mode));
+    });
+  }
+
+  /** Renders a workout mission's structured detail (muscle-group
+   *  headers + exercise lists) as HTML. Shared by the Fitness page
+   *  and the Today Hero card. */
+  function renderWorkoutDetailGroups(groups) {
+    if (!groups || groups.length === 0) {
+      return '<p class="workout-detail__empty">No exercise breakdown for this session.</p>';
+    }
+    return groups.map(g => `
+      <div class="workout-detail__group">
+        ${g.group ? `<h3 class="workout-detail__group-title">${g.group}</h3>` : ''}
+        <ul class="workout-detail__exercises">
+          ${g.exercises.map(ex => `<li>${ex}</li>`).join('')}
+        </ul>
+      </div>
+    `).join('');
+  }
+
   return {
-    TASK_ORDER,
-    TASK_META,
-    TASK_MODE_MINUTES,
+    get TASK_ORDER() { return TASK_ORDER; },
+    get TASK_META() { return TASK_META; },
+    get TASK_MODE_MINUTES() { return TASK_MODE_MINUTES; },
+    refreshTaskRegistry,
     STATUS_LABEL,
     TRANSITIONS,
     STATUS_DOT_CLASS,
@@ -2168,29 +2151,26 @@ const UI = (() => {
  * Renders the status/momentum portions of the "Today" view: the
  * live clock, the (collapsible) Day Rail, the completion ring +
  * status pill, the (collapsible) Weekly Progress chart, the
- * streak, and the Recovery card. The full task list itself is
- * rendered by planner.js (#plannerTaskGrid, now embedded in the
- * same Today view), and the "what's next" Hero card + onboarding
- * checklist + Recovery Prompt banner are rendered by today.js —
- * three files, one view, each owning a clearly separate slice.
+ * streak, and the Recovery card. The full task list is rendered
+ * by planner.js (#plannerTaskGrid, embedded in the same Today
+ * view), and the "what's next" Hero card + onboarding checklist +
+ * Recovery Prompt banner are rendered by today.js.
  *
  * Streak logic lives here (maybeUpdateStreak) and is exported so
- * every other page that changes a task's status can trigger the
- * same check — one rule, shared everywhere.
+ * every page that changes a task's status can trigger the same
+ * check.
  * ------------------------------------------------------------
  */
 
 const Dashboard = (() => {
 
-  // Morning Schedule, from the user's fixed routine.
-  // Each block: label, start (min since midnight), end (min since midnight)
   const MORNING_SCHEDULE = [
-    { label: 'Wake Up', start: 390, end: 400 },              // 06:30–06:40
-    { label: 'Workout', start: 400, end: 480 },              // 06:40–08:00
-    { label: 'Shower', start: 480, end: 495 },               // 08:00–08:15
-    { label: 'Breakfast', start: 495, end: 510 },            // 08:15–08:30
-    { label: 'Python Learning + Practice', start: 510, end: 555 }, // 08:30–09:15
-    { label: 'Leave For Work', start: 555, end: 570 }        // 09:15–09:30
+    { label: 'Wake Up', start: 390, end: 400 },
+    { label: 'Workout', start: 400, end: 480 },
+    { label: 'Shower', start: 480, end: 495 },
+    { label: 'Breakfast', start: 495, end: 510 },
+    { label: 'Python Learning + Practice', start: 510, end: 555 },
+    { label: 'Leave For Work', start: 555, end: 570 }
   ];
 
   function renderClock() {
@@ -2230,10 +2210,10 @@ const Dashboard = (() => {
     if (pct === 100) {
       pill.textContent = 'All Done';
       pill.className = 'pill';
-    } else if (UI.TASK_ORDER.some(k => todayTasks[k].status === 'recovery_planned')) {
+    } else if (UI.TASK_ORDER.some(k => todayTasks[k] && todayTasks[k].status === 'recovery_planned')) {
       pill.textContent = 'Recovering';
       pill.className = 'pill is-violet';
-    } else if (UI.TASK_ORDER.some(k => todayTasks[k].status === 'deferred')) {
+    } else if (UI.TASK_ORDER.some(k => todayTasks[k] && todayTasks[k].status === 'deferred')) {
       pill.textContent = 'Needs Recovery';
       pill.className = 'pill is-amber';
     } else {
@@ -2242,10 +2222,6 @@ const Dashboard = (() => {
     }
   }
 
-  /** The Recovery card — Work End Time, the generated evening plan
-   *  (if any), deferred tasks, and today's Reality Score. Reads
-   *  Storage's Recovery API; nothing here recomputes the algorithm
-   *  itself. */
   function renderRecoveryCard() {
     const container = document.getElementById('recoveryCard');
     const hint = document.getElementById('recoveryCardHint');
@@ -2271,7 +2247,7 @@ const Dashboard = (() => {
         ? session.scheduled.map(item => `
             <div class="recovery-plan__row">
               <span class="recovery-plan__time">${UI.minutesToClockLabel(item.startMinutes)}</span>
-              <span>${UI.TASK_META[item.category].label} — ${item.mode} (${item.minutes}m)</span>
+              <span>${UI.TASK_META[item.category] ? UI.TASK_META[item.category].label : item.category} — ${item.mode} (${item.minutes}m)</span>
             </div>
           `).join('')
         : `<p class="recovery-suggestion__text">Nothing needed recovery tonight.</p>`;
@@ -2302,8 +2278,9 @@ const Dashboard = (() => {
       const dayTasks = state.tasks[key];
       let pct = 0;
       if (dayTasks) {
-        const completed = UI.TASK_ORDER.filter(k => dayTasks[k] && dayTasks[k].status === 'completed').length;
-        pct = Math.round((completed / UI.TASK_ORDER.length) * 100);
+        const categories = Object.keys(dayTasks);
+        const completed = categories.filter(k => dayTasks[k] && dayTasks[k].status === 'completed').length;
+        pct = categories.length === 0 ? 0 : Math.round((completed / categories.length) * 100);
       }
       days.push({ label: d.toLocaleDateString('en-US', { weekday: 'narrow' }), pct, isToday: i === 0 });
     }
@@ -2325,12 +2302,9 @@ const Dashboard = (() => {
     document.querySelector('#navStreak .nav__streak-num').textContent = state.streaks.current;
   }
 
-  /** Recomputes the streak whenever a task's status changes.
-   *  Shared with every page that can change a task's status, so
-   *  everyone agrees on when a day counts. */
   function maybeUpdateStreak() {
     const todayTasks = Storage.ensureTodayTasks();
-    const allDone = UI.TASK_ORDER.every(k => todayTasks[k].status === 'completed');
+    const allDone = UI.TASK_ORDER.every(k => todayTasks[k] && todayTasks[k].status === 'completed');
     const state = Storage.getState();
     const today = Storage.todayKey();
 
@@ -2340,7 +2314,6 @@ const Dashboard = (() => {
       state.streaks.lastCompletedDate = today;
       Storage.setState(state);
     } else if (!allDone && state.streaks.lastCompletedDate === today) {
-      // Undoing a completion that had counted today
       state.streaks.current = Math.max(0, state.streaks.current - 1);
       state.streaks.lastCompletedDate = null;
       Storage.setState(state);
@@ -2360,7 +2333,6 @@ const Dashboard = (() => {
 
   function init() {
     render();
-    // Live clock + rail refresh every 30s; full re-render every 5 min
     setInterval(() => { renderClock(); renderDayRail(); }, 30000);
     setInterval(render, 5 * 60000);
   }
@@ -2372,13 +2344,15 @@ const Dashboard = (() => {
 /**
  * planner.js
  * ------------------------------------------------------------
- * Renders the Daily Planner view (Page 2). Every read/write
- * goes through Storage's Task API (getTask / setTaskStatus /
- * setTaskMode / getCompletionStats / getRemainingMinutes), and
- * every button/segmented-control it draws comes from UI's shared
- * renderers (UI.renderActionButtonsHTML, UI.renderModeSelectorHTML)
- * — the same ones the Python, English, and Workout pages use, so
+ * Renders the full task grid embedded in the Today view. Every
+ * read/write goes through Storage's Task API, and every
+ * button/segmented-control it draws comes from UI's shared
+ * renderers — the same ones the Fitness and Learning pages use, so
  * the status-transition system exists in exactly one place.
+ *
+ * Iterates UI.TASK_ORDER, which is now dynamically derived from
+ * the track registry — so this file needs zero changes when a
+ * track is added or archived.
  * ------------------------------------------------------------
  */
 
@@ -2388,7 +2362,7 @@ const Planner = (() => {
     const { completed, total, pct } = Storage.getCompletionStats();
     const remainingMin = Storage.getRemainingMinutes();
     const todayTasks = Storage.ensureTodayTasks();
-    const deferredCount = UI.TASK_ORDER.filter(k => todayTasks[k].status === 'deferred').length;
+    const deferredCount = UI.TASK_ORDER.filter(k => todayTasks[k] && todayTasks[k].status === 'deferred').length;
 
     document.getElementById('plannerPct').textContent = `${pct}%`;
     document.getElementById('plannerProgressFill').style.width = `${pct}%`;
@@ -2400,6 +2374,8 @@ const Planner = (() => {
   function renderTaskCard(taskKey) {
     const task = Storage.getTask(taskKey);
     const meta = UI.TASK_META[taskKey];
+    if (!meta) return null; // track was archived after today's tasks were created
+
     const minutes = UI.estimateMinutes(taskKey, task.mode);
     const dotClass = UI.STATUS_DOT_CLASS[task.status];
     const isDone = task.status === 'completed' || task.status === 'skipped';
@@ -2443,7 +2419,10 @@ const Planner = (() => {
   function renderTaskGrid() {
     const grid = document.getElementById('plannerTaskGrid');
     grid.innerHTML = '';
-    UI.TASK_ORDER.forEach(key => grid.appendChild(renderTaskCard(key)));
+    UI.TASK_ORDER.forEach(key => {
+      const card = renderTaskCard(key);
+      if (card) grid.appendChild(card);
+    });
   }
 
   function renderAll() {
@@ -2459,50 +2438,33 @@ const Planner = (() => {
   return { init, render: renderAll };
 })();
 
-/* ===== pythonManager.js ===== */
-/**
- * pythonManager.js
- * ------------------------------------------------------------
- * Python Learning Manager (Page 3). This is a thin config layer
- * over PlanEngine.createTopicPlanController — all the actual
- * parsing, mission generation, and progress logic lives in
- * planEngine.js / storage.js and is shared with English.
- * ------------------------------------------------------------
- */
-const PythonManager = PlanEngine.createTopicPlanController('python', {
-  textareaId: 'pythonPlanInput',
-  saveBtnId: 'pythonSaveBtn',
-  statusId: 'pythonSaveStatus',
-  weekHintId: 'pythonWeekHint',
-  currentTopicId: 'pythonCurrentTopic',
-  missionTextId: 'pythonTodayMission',
-  missionActionsId: 'pythonMissionActions',
-  progressPctId: 'pythonProgressPct',
-  progressFillId: 'pythonProgressFill',
-  completedListId: 'pythonCompletedList',
-  completedCountId: 'pythonCompletedCount',
-  remainingListId: 'pythonRemainingList',
-  remainingCountId: 'pythonRemainingCount'
-});
-
 /* ===== workoutManager.js ===== */
 /**
  * workoutManager.js
  * ------------------------------------------------------------
- * Workout Manager (Page 4). The display fields differ from the
- * Python/English pages (Today's Workout / Completed Sessions /
- * Weekly Consistency / Missed Sessions rather than a topic
- * curriculum), so this isn't built from the topic-plan factory —
- * but it still shares the same parsing engine (PlanEngine.
- * parseWorkoutPlan via Storage.savePlan), the same status system
- * (UI.renderActionButtonsHTML / UI.bindActionButtons), and the
- * same stats reader (Storage.getWorkoutStats). Nothing here is a
- * re-implementation of logic that already exists elsewhere.
+ * Workout Manager (Fitness page). Structurally different from
+ * learning tracks (a weekday template, not a sequential topic
+ * list), so this isn't built from the topic-plan factory — but it
+ * still shares the same parsing engine, status system, and mission
+ * generation as everything else. Not part of the track registry:
+ * workout is a fixed, special-cased category throughout the app.
  * ------------------------------------------------------------
  */
 
 const WorkoutManager = (() => {
   const CATEGORY = 'workout';
+
+  function capitalize(word) {
+    return word ? word.charAt(0).toUpperCase() + word.slice(1) : '';
+  }
+
+  const MISSED_STATUS_LABEL = {
+    deferred: 'Deferred',
+    skipped: 'Skipped',
+    not_started: 'Not started',
+    in_progress: 'In progress',
+    recovery_planned: 'Recovery Planned'
+  };
 
   function renderSaveStatus(plan) {
     const el = document.getElementById('workoutSaveStatus');
@@ -2520,32 +2482,6 @@ const WorkoutManager = (() => {
     Storage.savePlan(CATEGORY, raw);
     UI.toast('Workout plan saved');
     render();
-  }
-
-  function capitalize(word) {
-    return word ? word.charAt(0).toUpperCase() + word.slice(1) : '';
-  }
-
-  const MISSED_STATUS_LABEL = {
-    deferred: 'Deferred',
-    skipped: 'Skipped',
-    not_started: 'Not started',
-    in_progress: 'In progress',
-    recovery_planned: 'Recovery Planned'
-  };
-
-  function renderMissedThisWeek(stats) {
-    const list = document.getElementById('workoutMissedThisWeekList');
-    if (!stats.hasPlan || stats.missedThisWeek.length === 0) {
-      list.innerHTML = '<li class="topic-list__empty">Nothing missed yet this week.</li>';
-      return;
-    }
-    list.innerHTML = stats.missedThisWeek.map(m => `
-      <li class="topic-list__item">
-        ${capitalize(m.day)} — ${m.label}
-        <span class="topic-list__week">${MISSED_STATUS_LABEL[m.status] || m.status}</span>
-      </li>
-    `).join('');
   }
 
   function renderMission() {
@@ -2575,7 +2511,6 @@ const WorkoutManager = (() => {
       return;
     }
 
-    // "Monday – Upper Body Strength" as the tap-to-expand bar text
     missionTextEl.textContent = `${dayName} – ${stats.todayLabel}`;
     detailBodyEl.innerHTML = UI.renderWorkoutDetailGroups(stats.todayDetail);
 
@@ -2587,6 +2522,20 @@ const WorkoutManager = (() => {
       if (typeof Dashboard !== 'undefined') Dashboard.maybeUpdateStreak();
       render();
     });
+  }
+
+  function renderMissedThisWeek(stats) {
+    const list = document.getElementById('workoutMissedThisWeekList');
+    if (!stats.hasPlan || stats.missedThisWeek.length === 0) {
+      list.innerHTML = '<li class="topic-list__empty">Nothing missed yet this week.</li>';
+      return;
+    }
+    list.innerHTML = stats.missedThisWeek.map(m => `
+      <li class="topic-list__item">
+        ${capitalize(m.day)} — ${m.label}
+        <span class="topic-list__week">${MISSED_STATUS_LABEL[m.status] || m.status}</span>
+      </li>
+    `).join('');
   }
 
   function renderConsistency() {
@@ -2619,98 +2568,236 @@ const WorkoutManager = (() => {
   return { init, render };
 })();
 
-/* ===== englishManager.js ===== */
-/**
- * englishManager.js
- * ------------------------------------------------------------
- * English Learning Manager (Page 5). Same shape as
- * pythonManager.js — a thin config layer over
- * PlanEngine.createTopicPlanController. No parsing or progress
- * logic is duplicated here; it all lives in planEngine.js /
- * storage.js and is shared with Python.
- * ------------------------------------------------------------
- */
-const EnglishManager = PlanEngine.createTopicPlanController('english', {
-  textareaId: 'englishPlanInput',
-  saveBtnId: 'englishSaveBtn',
-  statusId: 'englishSaveStatus',
-  weekHintId: 'englishWeekHint',
-  currentTopicId: 'englishCurrentTopic',
-  missionTextId: 'englishTodayMission',
-  missionActionsId: 'englishMissionActions',
-  progressPctId: 'englishProgressPct',
-  progressFillId: 'englishProgressFill',
-  completedListId: 'englishCompletedList',
-  completedCountId: 'englishCompletedCount',
-  remainingListId: 'englishRemainingList',
-  remainingCountId: 'englishRemainingCount'
-});
-
 /* ===== learningHub.js ===== */
 /**
  * learningHub.js
  * ------------------------------------------------------------
- * Switches between learning tracks (currently Python and English)
- * within the single "Learning" nav destination. This is a UI-only
- * layer — PythonManager and EnglishManager are unchanged and still
- * own all the actual plan/mission/progress logic; this file just
- * decides which one is visible and makes sure the one becoming
- * visible re-renders with current data.
+ * The Learning Hub is now a real registry-driven page, not two
+ * hardcoded tabs. It builds the DOM for every active track (tab +
+ * full topic-plan page) at render time, and instantiates
+ * PlanEngine.createTopicPlanController — the same factory used
+ * since Phase 3 — with generated element ids per track, instead of
+ * two hand-authored HTML blocks with hardcoded ids. This is what
+ * lets a user-added track ("+ Add Track") get the full plan-upload
+ * / mission / progress experience immediately, with no new code.
  *
- * NOTE: this is intentionally NOT the full track-registry
- * generalization described in the product strategy doc (that's a
- * larger, deferred architecture change to make tracks fully
- * data-driven/unlimited). This is the navigational grouping only.
+ * pythonManager.js and englishManager.js no longer exist as
+ * separate files — this replaces them entirely. Workout is NOT
+ * part of this registry; it stays in workoutManager.js, since its
+ * data model (a weekday template) is fundamentally different from
+ * a sequential topic track.
  * ------------------------------------------------------------
  */
 
 const LearningHub = (() => {
 
-  const CONTROLLERS = { python: PythonManager, english: EnglishManager };
+  let controllers = {}; // trackId -> {init, render}
+
+  function idsFor(trackId) {
+    const p = `track-${trackId}`;
+    return {
+      textareaId: `${p}-input`,
+      saveBtnId: `${p}-saveBtn`,
+      statusId: `${p}-status`,
+      weekHintId: `${p}-weekHint`,
+      currentTopicId: `${p}-currentTopic`,
+      missionTextId: `${p}-mission`,
+      missionActionsId: `${p}-missionActions`,
+      progressPctId: `${p}-progressPct`,
+      progressFillId: `${p}-progressFill`,
+      completedListId: `${p}-completedList`,
+      completedCountId: `${p}-completedCount`,
+      remainingListId: `${p}-remainingList`,
+      remainingCountId: `${p}-remainingCount`
+    };
+  }
+
+  function trackPageHTML(trackId) {
+    const ids = idsFor(trackId);
+    return `
+      <div class="grid grid--plan-upload">
+        <div class="card card--plan-upload">
+          <div class="card__head">
+            <h2>Upload Plan</h2>
+            <span class="card__hint">Paste ChatGPT output</span>
+          </div>
+          <textarea class="plan-textarea" id="${ids.textareaId}" placeholder="Week 1&#10;Topic One&#10;Topic Two&#10;Topic Three"></textarea>
+          <div class="plan-upload__row">
+            <button class="action-btn action-btn--primary" id="${ids.saveBtnId}">Save Plan</button>
+            <span class="plan-upload__status" id="${ids.statusId}"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid--plan-top">
+        <div class="card">
+          <div class="card__head">
+            <h2>Current Topic</h2>
+            <span class="card__hint" id="${ids.weekHintId}">—</span>
+          </div>
+          <p class="current-topic__value" id="${ids.currentTopicId}">Upload a plan to get started.</p>
+        </div>
+
+        <div class="card">
+          <div class="card__head">
+            <h2>Today's Mission</h2>
+            <span class="card__hint">Adaptive</span>
+          </div>
+          <p class="mission__text" id="${ids.missionTextId}">—</p>
+          <div class="planner-card__actions" id="${ids.missionActionsId}"></div>
+        </div>
+      </div>
+
+      <div class="grid grid--plan-mid">
+        <div class="card">
+          <div class="card__head">
+            <h2>Progress</h2>
+            <span class="card__hint" id="${ids.progressPctId}">0%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-bar__fill" id="${ids.progressFillId}" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <div class="grid grid--plan-bottom">
+        <div class="card">
+          <div class="card__head">
+            <h2>Completed Topics</h2>
+            <span class="card__hint" id="${ids.completedCountId}">0</span>
+          </div>
+          <ul class="topic-list" id="${ids.completedListId}">
+            <li class="topic-list__empty">Nothing completed yet.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card__head">
+            <h2>Remaining Topics</h2>
+            <span class="card__hint" id="${ids.remainingCountId}">0</span>
+          </div>
+          <ul class="topic-list" id="${ids.remainingListId}">
+            <li class="topic-list__empty">Upload a plan to see topics.</li>
+          </ul>
+        </div>
+      </div>
+    `;
+  }
 
   function activate(trackId) {
-    document.querySelectorAll('.learning-tab').forEach(btn => {
+    document.querySelectorAll('.learning-tab[data-track]').forEach(btn => {
       btn.classList.toggle('is-active', btn.dataset.track === trackId);
     });
     document.querySelectorAll('.learning-track').forEach(section => {
       section.classList.toggle('is-active', section.dataset.track === trackId);
     });
-    const controller = CONTROLLERS[trackId];
-    if (controller) controller.render();
+    if (controllers[trackId]) controllers[trackId].render();
   }
 
   function bindTabs() {
-    document.querySelectorAll('.learning-tab').forEach(btn => {
+    document.querySelectorAll('.learning-tab[data-track]').forEach(btn => {
       btn.addEventListener('click', () => activate(btn.dataset.track));
     });
   }
 
+  function bindAddTrackControls() {
+    const openBtn = document.getElementById('learningAddTrackBtn');
+    const form = document.getElementById('addTrackForm');
+    const input = document.getElementById('addTrackInput');
+    const confirmBtn = document.getElementById('addTrackConfirmBtn');
+    const cancelBtn = document.getElementById('addTrackCancelBtn');
+
+    openBtn.addEventListener('click', () => {
+      form.style.display = 'flex';
+      input.value = '';
+      input.focus();
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      form.style.display = 'none';
+    });
+
+    const submit = () => {
+      const id = Storage.addTrack(input.value);
+      if (!id) {
+        UI.toast('Give the track a name first.');
+        return;
+      }
+      UI.refreshTaskRegistry();
+      form.style.display = 'none';
+      buildAndRenderHub();
+      activate(id);
+      UI.toast('Track added');
+    };
+    confirmBtn.addEventListener('click', submit);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+  }
+
+  /** Rebuilds every tab and track page from the current registry,
+   *  and (re)creates a controller per track. Called on init and any
+   *  time the registry changes (add/archive/restore a track). */
+  function buildAndRenderHub() {
+    const tracks = Storage.getTracks();
+    const tabsEl = document.getElementById('learningTabs');
+    const containerEl = document.getElementById('learningTracksContainer');
+
+    const previouslyActive = document.querySelector('.learning-tab.is-active[data-track]');
+    const activeId = previouslyActive ? previouslyActive.dataset.track : (tracks[0] ? tracks[0].id : null);
+
+    tabsEl.innerHTML = tracks.map((t, i) => `
+      <button class="learning-tab ${t.id === activeId ? 'is-active' : ''}" data-track="${t.id}">${t.icon || '◆'} ${t.label}</button>
+    `).join('') + `<button class="learning-tab learning-tab--add" id="learningAddTrackBtn" title="Add a track">+ Add</button>`;
+
+    if (tracks.length === 0) {
+      containerEl.innerHTML = `
+        <div class="placeholder-card">
+          <span class="placeholder-card__icon">⧉</span>
+          <h2>No learning tracks yet</h2>
+          <p>Tap "+ Add" above to create your first one — Python, English, or anything you're studying.</p>
+        </div>
+      `;
+    } else {
+      containerEl.innerHTML = tracks.map(t => `
+        <div class="learning-track ${t.id === activeId ? 'is-active' : ''}" data-track="${t.id}" id="track-${t.id}"></div>
+      `).join('');
+    }
+
+    controllers = {};
+    tracks.forEach(t => {
+      const section = document.getElementById(`track-${t.id}`);
+      section.innerHTML = trackPageHTML(t.id);
+      controllers[t.id] = PlanEngine.createTopicPlanController(t.id, idsFor(t.id));
+      controllers[t.id].init();
+    });
+
+    bindTabs();
+    bindAddTrackControls();
+  }
+
   function render() {
-    const activeTab = document.querySelector('.learning-tab.is-active');
-    activate(activeTab ? activeTab.dataset.track : 'python');
+    const activeTab = document.querySelector('.learning-tab.is-active[data-track]');
+    if (activeTab && controllers[activeTab.dataset.track]) {
+      controllers[activeTab.dataset.track].render();
+    }
   }
 
   function init() {
-    bindTabs();
+    UI.refreshTaskRegistry();
+    buildAndRenderHub();
   }
 
-  return { init, render };
+  return { init, render, refresh: buildAndRenderHub };
 })();
 
 /* ===== recoveryPlanner.js ===== */
 /**
  * recoveryPlanner.js
  * ------------------------------------------------------------
- * Recovery Planner (Page 6) — the core feature's front door.
- * Collects Work End Time + Energy Level (+ the optional "Recover
- * Workout" opt-in), hands them to Storage.generateRecoveryPlan
- * (which runs RecoveryEngine and saves the result), then renders
- * whatever comes back: the schedule, what got deferred, the
- * Reality Score, and the End-of-Day Review form.
- *
- * This file does no scheduling math itself — it's a thin render
- * layer over Storage's Recovery API, same pattern as every other
- * page in the app.
+ * Recovery Planner — the core feature's front door. Collects Work
+ * End Time + Energy Level (+ the optional "Recover Workout"
+ * opt-in), hands them to Storage.generateRecoveryPlan (which runs
+ * RecoveryEngine and saves the result), then renders whatever comes
+ * back. Needs no changes for the track registry — every active
+ * learning track is automatically a candidate, since that list is
+ * computed inside storage.js from the live registry.
  * ------------------------------------------------------------
  */
 
@@ -2723,10 +2810,6 @@ const RecoveryPlanner = (() => {
     { value: 'lack_of_focus', label: 'Lack of Focus' },
     { value: 'other', label: 'Other' }
   ];
-
-  function capitalize(word) {
-    return word ? word.charAt(0).toUpperCase() + word.slice(1) : '';
-  }
 
   function currentEnergySelection() {
     const active = document.querySelector('.energy-btn.is-active');
@@ -2795,7 +2878,7 @@ const RecoveryPlanner = (() => {
 
     session.scheduled.forEach(item => {
       const task = Storage.getTask(item.category);
-      const meta = UI.TASK_META[item.category];
+      const meta = UI.TASK_META[item.category] || { icon: '◆', label: item.category };
       const row = UI.el('li', 'recovery-schedule__row', `
         <div class="recovery-schedule__info">
           <span class="recovery-schedule__time">${UI.minutesToClockLabel(item.startMinutes)}</span>
@@ -2833,7 +2916,7 @@ const RecoveryPlanner = (() => {
       list.innerHTML = '<li class="topic-list__empty">Nothing deferred tonight.</li>';
     } else {
       session.deferred.forEach(category => {
-        const meta = UI.TASK_META[category];
+        const meta = UI.TASK_META[category] || { icon: '◆', label: category };
         list.appendChild(UI.el('li', 'topic-list__item is-deferred-item', `
           ${meta.icon} ${meta.label} <span class="topic-list__week">Deferred to tomorrow</span>
         `));
@@ -2878,8 +2961,8 @@ const RecoveryPlanner = (() => {
     const todayTasks = Storage.ensureTodayTasks();
     const existingReview = Storage.getEndOfDayReview();
 
-    const completed = UI.TASK_ORDER.filter(k => todayTasks[k].status === 'completed');
-    const missed = UI.TASK_ORDER.filter(k => todayTasks[k].status !== 'completed');
+    const completed = UI.TASK_ORDER.filter(k => todayTasks[k] && todayTasks[k].status === 'completed');
+    const missed = UI.TASK_ORDER.filter(k => todayTasks[k] && todayTasks[k].status !== 'completed');
 
     document.getElementById('reviewCompletedList').innerHTML = completed.length
       ? completed.map(k => `<li class="topic-list__item is-done">${UI.TASK_META[k].icon} ${UI.TASK_META[k].label}</li>`).join('')
@@ -2951,12 +3034,12 @@ const RecoveryPlanner = (() => {
 /**
  * analytics.js
  * ------------------------------------------------------------
- * The Insights page. Every insight here is read from data the app
- * already collects elsewhere (task timestamps, plan cursors,
- * recovery sessions, End-of-Day Review reasons) — nothing new is
- * stored just to support this page. The design principle from the
- * product strategy doc: every insight is a plain-English sentence
- * with a number in it, not a chart requiring interpretation.
+ * The Insights page. Every insight is read from data the app
+ * already collects elsewhere — nothing new is stored just to
+ * support this page. Learning-related sentences (velocity, peak
+ * productivity window) now loop over every active track in the
+ * registry instead of hardcoding 'python'/'english', so a
+ * user-added track gets the same insights automatically.
  * ------------------------------------------------------------
  */
 
@@ -3030,8 +3113,8 @@ const Analytics = (() => {
     return `You recover <strong>${analytics.recoverySuccessRatePct}%</strong> of tasks that get scheduled into an evening plan.`;
   }
 
-  function learningVelocitySentence(category, label) {
-    const v = Storage.getLearningVelocity(category);
+  function learningVelocitySentence(trackId, label) {
+    const v = Storage.getLearningVelocity(trackId);
     if (!v) return null;
     if (v.remaining === 0) {
       return `You've finished every topic in your ${label} plan. 🎉`;
@@ -3045,8 +3128,8 @@ const Analytics = (() => {
     return `You're completing about <strong>${v.perActiveDay}</strong> ${label} topic${v.perActiveDay === 1 ? '' : 's'} per active day —${pace}`;
   }
 
-  function peakWindowSentence(category, label) {
-    const w = Storage.getPeakProductivityWindow(category);
+  function peakWindowSentence(trackId, label) {
+    const w = Storage.getPeakProductivityWindow(trackId);
     if (!w || w.total < 3) return null;
     if (w.before7pmPct >= 60) {
       return `You complete ${label} <strong>${w.before7pmPct}%</strong> of the time before 7 PM — mornings/afternoons are your strongest window for it.`;
@@ -3077,13 +3160,14 @@ const Analytics = (() => {
 
   function renderSentences(analytics) {
     const list = document.getElementById('insightSentences');
+    const tracks = Storage.getTracks();
+
     const sentences = [
       consistencyTrendSentence(),
       recoverySuccessSentence(analytics),
-      learningVelocitySentence('python', 'Python'),
-      learningVelocitySentence('english', 'English'),
+      ...tracks.map(t => learningVelocitySentence(t.id, t.label)),
       workoutAdherenceSentence(),
-      peakWindowSentence('python', 'Python') || peakWindowSentence('english', 'English'),
+      ...tracks.map(t => peakWindowSentence(t.id, t.label)).filter(Boolean).slice(0, 1),
       missedCausesSentence()
     ].filter(Boolean);
 
@@ -3111,18 +3195,17 @@ const Analytics = (() => {
 /**
  * today.js
  * ------------------------------------------------------------
- * The three new pieces of the merged "Today" view that didn't
- * exist as Dashboard or Planner concepts before:
+ * The three pieces of the merged "Today" view that didn't exist as
+ * Dashboard or Planner concepts before:
  *
  *   - Hero card: "what's next" — the single most useful thing to
  *     act on right now, with its own Start/Defer/Skip/Complete
- *     buttons, so a returning user never has to scroll to act.
+ *     buttons. Iterates UI.TASK_ORDER, so it automatically includes
+ *     any user-added learning track.
  *   - Onboarding checklist: 4 steps, auto-detected from existing
  *     Storage state, hidden entirely once all 4 are done.
  *   - Recovery Prompt: a conditional banner that only appears once
- *     there's something worth recovering — this is what makes
- *     Recovery discoverable without requiring the user to
- *     remember a nav item exists.
+ *     there's something worth recovering.
  * ------------------------------------------------------------
  */
 
@@ -3131,8 +3214,8 @@ const Today = (() => {
   function nextActionableTask() {
     const todayTasks = Storage.ensureTodayTasks();
     return UI.TASK_ORDER.find(k => {
-      const status = todayTasks[k].status;
-      return status !== 'completed' && status !== 'skipped';
+      const status = todayTasks[k] && todayTasks[k].status;
+      return status && status !== 'completed' && status !== 'skipped';
     }) || null;
   }
 
@@ -3166,7 +3249,7 @@ const Today = (() => {
 
     // Workout missions get a tap-to-expand exercise breakdown,
     // identical to the one on the Fitness page — everything else
-    // (Python/English/Startup) just shows its mission line as text.
+    // just shows its mission line as text.
     let missionHtml;
     if (key === 'workout' && Storage.hasPlan('workout')) {
       const mission = Storage.getMission(key);
@@ -3207,10 +3290,6 @@ const Today = (() => {
     });
   }
 
-  // ------------------------------------------------------------
-  // Onboarding checklist
-  // ------------------------------------------------------------
-
   function hasEverCompletedATask(daysBack = 90) {
     const state = Storage.getState();
     for (let i = 0; i < daysBack; i++) {
@@ -3227,12 +3306,16 @@ const Today = (() => {
     return Object.keys(state.recoverySessions || {}).length > 0;
   }
 
+  function hasAnyLearningPlan() {
+    return Storage.getTracks().some(t => Storage.hasPlan(t.id));
+  }
+
   function renderOnboarding() {
     const card = document.getElementById('onboardingChecklist');
     const list = document.getElementById('onboardingList');
 
     const steps = [
-      { label: 'Upload your first learning plan', done: Storage.hasPlan('python') || Storage.hasPlan('english'), view: 'learning' },
+      { label: 'Upload your first learning plan', done: hasAnyLearningPlan(), view: 'learning' },
       { label: 'Upload a workout plan', done: Storage.hasPlan('workout'), view: 'fitness' },
       { label: 'Complete your first task', done: hasEverCompletedATask(), view: 'today' },
       { label: 'Generate your first recovery plan', done: hasEverGeneratedRecoveryPlan(), view: 'recovery' }
@@ -3258,10 +3341,6 @@ const Today = (() => {
     });
   }
 
-  // ------------------------------------------------------------
-  // Recovery Prompt
-  // ------------------------------------------------------------
-
   function renderRecoveryPrompt() {
     const banner = document.getElementById('recoveryPromptBanner');
     const titleEl = document.getElementById('recoveryPromptTitle');
@@ -3269,10 +3348,10 @@ const Today = (() => {
 
     const todayTasks = Storage.ensureTodayTasks();
     const pendingCount = UI.TASK_ORDER.filter(k => {
-      const status = todayTasks[k].status;
-      return status !== 'completed' && status !== 'skipped';
+      const status = todayTasks[k] && todayTasks[k].status;
+      return status && status !== 'completed' && status !== 'skipped';
     }).length;
-    const hasDeferred = UI.TASK_ORDER.some(k => todayTasks[k].status === 'deferred');
+    const hasDeferred = UI.TASK_ORDER.some(k => todayTasks[k] && todayTasks[k].status === 'deferred');
     const hourNow = new Date().getHours();
     const isEvening = hourNow >= 18;
 
@@ -3312,13 +3391,11 @@ const Today = (() => {
 /**
  * settings.js
  * ------------------------------------------------------------
- * Export/Import (the highest-leverage fix for "no backup, total
- * loss on device/browser loss" from the product audit), PIN
- * management, and the local lock/reset actions. Export/Import
- * round-trips through the exact same Storage.getState() /
- * _mergeDefaults path the app already uses on every load, so an
- * exported file from an older version of the app still imports
- * cleanly against today's schema.
+ * Export/Import, PIN management, the local lock/reset actions, and
+ * (new) Manage Tracks — archiving/restoring learning tracks from
+ * the registry. Archiving hides a track from Learning/Recovery/
+ * Insights without deleting its plan or history, in case it's
+ * wanted back later.
  * ------------------------------------------------------------
  */
 
@@ -3381,11 +3458,6 @@ const Settings = (() => {
     }
   }
 
-  /** Non-destructive version of the cache-clearing part of
-   *  handleReset — clears the service worker's cache and forces a
-   *  fresh fetch of every file, WITHOUT touching any saved data.
-   *  This is what most "I updated the files but nothing changed"
-   *  reports actually need, rather than a full data wipe. */
   async function handleForceRefresh() {
     const statusEl = document.getElementById('settingsDataStatus');
     if ('caches' in window) {
@@ -3422,6 +3494,50 @@ const Settings = (() => {
     location.reload();
   }
 
+  function renderTrackList() {
+    const list = document.getElementById('settingsTrackList');
+    if (!list) return;
+    const active = Storage.getTracks();
+    const archived = Storage.getTracks(true).filter(t => t.archived);
+
+    if (active.length === 0 && archived.length === 0) {
+      list.innerHTML = '<li class="topic-list__empty">No tracks yet — add one from the Learning page.</li>';
+      return;
+    }
+
+    const activeRows = active.map(t => `
+      <li class="track-manage-row" data-track="${t.id}" data-action="archive">
+        <span>${t.icon || '◆'} ${t.label}</span>
+        <button class="action-btn action-btn--ghost track-manage-btn" data-track="${t.id}" data-action="archive">Archive</button>
+      </li>
+    `).join('');
+
+    const archivedRows = archived.map(t => `
+      <li class="track-manage-row is-archived" data-track="${t.id}">
+        <span>${t.icon || '◆'} ${t.label} <span class="topic-list__week">Archived</span></span>
+        <button class="action-btn action-btn--ghost track-manage-btn" data-track="${t.id}" data-action="restore">Restore</button>
+      </li>
+    `).join('');
+
+    list.innerHTML = activeRows + archivedRows;
+
+    list.querySelectorAll('.track-manage-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const trackId = btn.dataset.track;
+        if (btn.dataset.action === 'archive') {
+          Storage.archiveTrack(trackId);
+          UI.toast('Track archived');
+        } else {
+          Storage.restoreTrack(trackId);
+          UI.toast('Track restored');
+        }
+        UI.refreshTaskRegistry();
+        if (typeof LearningHub !== 'undefined') LearningHub.refresh();
+        renderTrackList();
+      });
+    });
+  }
+
   function bind() {
     document.getElementById('settingsExportBtn').addEventListener('click', handleExport);
     document.getElementById('settingsImportInput').addEventListener('change', handleImportFile);
@@ -3434,6 +3550,7 @@ const Settings = (() => {
   function render() {
     document.getElementById('settingsDataStatus').textContent = '';
     document.getElementById('settingsPinError').textContent = '';
+    renderTrackList();
   }
 
   function init() {
@@ -3449,15 +3566,12 @@ const Settings = (() => {
  * app.js
  * ------------------------------------------------------------
  * App bootstrap + view router. Views are simple show/hide
- * sections inside index.html (no page reloads), which keeps
- * the DOM structure close to what a Django template set would
- * look like later (one container per page/template).
+ * sections inside index.html (no page reloads).
  *
- * Nav destinations are goal-based (Today / Learning / Fitness /
- * Recovery / Insights / Settings), not feature-based — Today
- * merges what used to be separate Dashboard + Daily Planner
- * views, and Learning groups Python + English under one
- * destination with an inner tab switcher (LearningHub).
+ * Nav destinations: Today / Learning / Fitness / Recovery /
+ * Insights / Settings. Learning is now driven entirely by
+ * LearningHub + the track registry — there's no PythonManager or
+ * EnglishManager to initialize separately anymore.
  * ------------------------------------------------------------
  */
 
@@ -3509,13 +3623,12 @@ const App = (() => {
   function init() {
     Storage.init();
     Auth.init();
+    UI.refreshTaskRegistry();
     bindNav();
 
     Dashboard.init();
     Planner.init();
-    PythonManager.init();
     WorkoutManager.init();
-    EnglishManager.init();
     LearningHub.init();
     RecoveryPlanner.init();
     Analytics.init();
@@ -3531,11 +3644,10 @@ const App = (() => {
 document.addEventListener('DOMContentLoaded', App.init);
 
 /**
- * Service worker registration for PWA installability. This only
- * succeeds when the app is served over HTTPS or http://localhost —
- * browsers refuse it on file://, by design. Guarded so opening the
- * single HTML file directly still works exactly as before; this
- * silently does nothing in that case rather than erroring.
+ * Service worker registration for PWA installability. Only
+ * succeeds over HTTPS or http://localhost — browsers refuse it on
+ * file://, by design. Guarded so opening a single HTML file
+ * directly still works exactly as before.
  */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   window.addEventListener('load', () => {
