@@ -20,7 +20,6 @@
    ADAPTIVE PERSONAL OS — DESIGN TOKENS
    ============================================================ */
 :root {
-  /* Surfaces */
   --bg: #0A0C10;
   --surface: #12151B;
   --surface-2: #171B23;
@@ -28,29 +27,25 @@
   --border: #232833;
   --border-soft: #1A1E27;
 
-  /* Text */
   --text: #E7E9EE;
   --text-muted: #8B92A0;
   --text-faint: #565D6B;
 
-  /* Accents — each tied to a state, not decoration */
-  --accent-blue: #5C8DFF;    /* in progress / active */
+  --accent-blue: #5C8DFF;
   --accent-blue-dim: rgba(92, 141, 255, 0.14);
-  --accent-green: #35D399;  /* completed / on track */
+  --accent-green: #35D399;
   --accent-green-dim: rgba(53, 211, 153, 0.14);
-  --accent-amber: #F5A623;  /* deferred / needs attention */
+  --accent-amber: #F5A623;
   --accent-amber-dim: rgba(245, 166, 35, 0.14);
-  --accent-red: #F2545B;    /* missed / skipped */
+  --accent-red: #F2545B;
   --accent-red-dim: rgba(242, 84, 91, 0.14);
-  --accent-violet: #A78BFA; /* recovery planned */
+  --accent-violet: #A78BFA;
   --accent-violet-dim: rgba(167, 139, 250, 0.14);
 
-  /* Type */
   --font-display: 'Sora', 'Inter', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
 
-  /* Layout */
   --nav-width: 232px;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -62,7 +57,6 @@
    RESET / BASE
    ============================================================ */
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
 html { color-scheme: dark; }
 
 body {
@@ -77,10 +71,7 @@ body {
 
 ul { list-style: none; }
 button { font-family: inherit; cursor: pointer; touch-action: manipulation; }
-:focus-visible {
-  outline: 2px solid var(--accent-blue);
-  outline-offset: 2px;
-}
+:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -112,196 +103,78 @@ button { font-family: inherit; cursor: pointer; touch-action: manipulation; }
   height: 100vh;
 }
 
-.nav__brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px 22px 10px;
-}
-.nav__brand-mark {
-  font-size: 18px;
-  color: var(--accent-blue);
-}
-.nav__brand-text {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 15px;
-  letter-spacing: -0.01em;
-}
+.nav__brand { display: flex; align-items: center; gap: 8px; padding: 6px 10px 22px 10px; }
+.nav__brand-mark { font-size: 18px; color: var(--accent-blue); }
+.nav__brand-text { font-family: var(--font-display); font-weight: 600; font-size: 15px; letter-spacing: -0.01em; }
 
-.nav__list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-}
+.nav__list { display: flex; flex-direction: column; gap: 2px; flex: 1; }
 
 .nav__item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  padding: 9px 10px;
-  border-radius: var(--radius-sm);
-  font-size: 13.5px;
-  font-weight: 500;
-  text-align: left;
-  transition: background 0.12s ease, color 0.12s ease;
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  background: transparent; border: none; color: var(--text-muted);
+  padding: 9px 10px; border-radius: var(--radius-sm); font-size: 13.5px;
+  font-weight: 500; text-align: left; transition: background 0.12s ease, color 0.12s ease;
 }
-.nav__item:hover {
-  background: var(--surface-hover);
-  color: var(--text);
-}
-.nav__item.is-active {
-  background: var(--accent-blue-dim);
-  color: var(--accent-blue);
-}
-.nav__icon {
-  width: 18px;
-  text-align: center;
-  font-size: 14px;
-  opacity: 0.9;
-}
+.nav__item:hover { background: var(--surface-hover); color: var(--text); }
+.nav__item.is-active { background: var(--accent-blue-dim); color: var(--accent-blue); }
+.nav__icon { width: 18px; text-align: center; font-size: 14px; opacity: 0.9; }
 
-.nav__footer {
-  padding-top: 12px;
-  border-top: 1px solid var(--border-soft);
-}
+.nav__footer { padding-top: 12px; border-top: 1px solid var(--border-soft); }
 .nav__streak {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
+  display: flex; align-items: baseline; gap: 6px; padding: 8px 10px;
+  border-radius: var(--radius-sm); background: var(--surface-2);
 }
-.nav__streak-num {
-  font-family: var(--font-mono);
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--accent-amber);
-}
-.nav__streak-label {
-  font-size: 12px;
-  color: var(--text-muted);
-}
+.nav__streak-num { font-family: var(--font-mono); font-size: 18px; font-weight: 500; color: var(--accent-amber); }
+.nav__streak-label { font-size: 12px; color: var(--text-muted); }
 
 /* ============================================================
    MAIN / TOPBAR
    ============================================================ */
-.main {
-  padding: 28px 36px 60px;
-  max-width: 1180px;
-}
+.main { padding: 28px 36px 60px; max-width: 1180px; }
 
-.topbar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 28px;
-  flex-wrap: wrap;
-  gap: 12px;
+.topbar { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+.topbar__title { font-family: var(--font-display); font-size: 24px; font-weight: 600; letter-spacing: -0.01em; }
+.topbar__subtitle { color: var(--text-muted); font-size: 13.5px; margin-top: 4px; }
+.topbar__clock { text-align: right; font-family: var(--font-mono); }
+.topbar__time { display: block; font-size: 22px; font-weight: 500; letter-spacing: -0.02em; }
+.topbar__date { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.topbar__lock {
+  background: var(--surface-2); border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+  font-size: 15px; padding: 8px 12px; min-height: 40px; color: var(--text-muted); flex-shrink: 0; align-self: flex-start;
 }
-
-.topbar__title {
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-.topbar__subtitle {
-  color: var(--text-muted);
-  font-size: 13.5px;
-  margin-top: 4px;
-}
-
-.topbar__clock {
-  text-align: right;
-  font-family: var(--font-mono);
-}
-.topbar__time {
-  display: block;
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-.topbar__date {
-  display: block;
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
+.topbar__lock:hover { background: var(--surface-hover); color: var(--text); }
 
 /* ============================================================
    VIEWS
    ============================================================ */
 .view { display: none; }
 .view.is-active { display: block; animation: fadeIn 0.18s ease; }
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ============================================================
    GRID SYSTEM
    ============================================================ */
-.grid {
-  display: grid;
-  gap: 16px;
-  margin-bottom: 16px;
-}
+.grid { display: grid; gap: 16px; margin-bottom: 16px; }
 .grid--top { grid-template-columns: 1.1fr 1.4fr; }
 .grid--mid { grid-template-columns: 1.3fr 1fr; }
 .grid--bottom { grid-template-columns: 1fr 1fr; }
 
 @media (max-width: 980px) {
-  .grid--top, .grid--mid, .grid--bottom {
-    grid-template-columns: 1fr;
-  }
+  .grid--top, .grid--mid, .grid--bottom { grid-template-columns: 1fr; }
 }
 
 /* ============================================================
    CARDS
    ============================================================ */
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  padding: 20px;
+  background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card); padding: 20px;
 }
+.card__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.card__head h2 { font-family: var(--font-display); font-size: 14.5px; font-weight: 600; }
+.card__hint { font-size: 11.5px; color: var(--text-faint); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em; }
 
-.card__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-.card__head h2 {
-  font-family: var(--font-display);
-  font-size: 14.5px;
-  font-weight: 600;
-}
-.card__hint {
-  font-size: 11.5px;
-  color: var(--text-faint);
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.pill {
-  font-size: 11.5px;
-  font-weight: 500;
-  padding: 4px 10px;
-  border-radius: 100px;
-  background: var(--accent-green-dim);
-  color: var(--accent-green);
-}
+.pill { font-size: 11.5px; font-weight: 500; padding: 4px 10px; border-radius: 100px; background: var(--accent-green-dim); color: var(--accent-green); }
 .pill.is-amber { background: var(--accent-amber-dim); color: var(--accent-amber); }
 .pill.is-red { background: var(--accent-red-dim); color: var(--accent-red); }
 .pill.is-violet { background: var(--accent-violet-dim); color: var(--accent-violet); }
@@ -309,1157 +182,339 @@ button { font-family: inherit; cursor: pointer; touch-action: manipulation; }
 /* ============================================================
    STATUS RING
    ============================================================ */
-.status-ring-row {
-  display: flex;
-  align-items: center;
-  gap: 22px;
-}
-
+.status-ring-row { display: flex; align-items: center; gap: 22px; }
 .ring {
-  --pct: 0;
-  width: 92px;
-  height: 92px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background:
-    radial-gradient(closest-side, var(--surface) 72%, transparent 73% 100%),
+  --pct: 0; width: 92px; height: 92px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(closest-side, var(--surface) 72%, transparent 73% 100%),
     conic-gradient(var(--accent-green) calc(var(--pct) * 1%), var(--border) 0);
   transition: background 0.4s ease;
 }
-.ring__value {
-  font-family: var(--font-mono);
-  font-size: 18px;
-  font-weight: 500;
-}
-
-.status-details {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.status-detail {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.status-detail__label {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-.status-detail__value {
-  font-size: 14.5px;
-  font-weight: 500;
-  font-family: var(--font-mono);
-}
+.ring__value { font-family: var(--font-mono); font-size: 18px; font-weight: 500; }
+.status-details { display: flex; flex-direction: column; gap: 12px; }
+.status-detail { display: flex; flex-direction: column; gap: 2px; }
+.status-detail__label { font-size: 12px; color: var(--text-muted); }
+.status-detail__value { font-size: 14.5px; font-weight: 500; font-family: var(--font-mono); }
 
 /* ============================================================
-   DAY RAIL (signature element)
-   A vertical timeline of today's time blocks with a live
-   "now" marker — the app's core idea (adaptive scheduling)
-   made visible at a glance.
+   DAY RAIL
    ============================================================ */
-.day-rail {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  padding-left: 18px;
-}
-
-.day-rail__block {
-  position: relative;
-  padding: 10px 0 10px 18px;
-  border-left: 2px solid var(--border);
-}
+.day-rail { display: flex; flex-direction: column; position: relative; padding-left: 18px; }
+.day-rail__block { position: relative; padding: 10px 0 10px 18px; border-left: 2px solid var(--border); }
 .day-rail__block::before {
-  content: '';
-  position: absolute;
-  left: -7px;
-  top: 14px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--surface);
-  border: 2px solid var(--border);
+  content: ''; position: absolute; left: -7px; top: 14px; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--surface); border: 2px solid var(--border);
 }
 .day-rail__block.is-done::before { border-color: var(--accent-green); background: var(--accent-green); }
 .day-rail__block.is-now { border-left-color: var(--accent-blue); }
-.day-rail__block.is-now::before {
-  border-color: var(--accent-blue);
-  background: var(--accent-blue);
-  box-shadow: 0 0 0 4px var(--accent-blue-dim);
-}
+.day-rail__block.is-now::before { border-color: var(--accent-blue); background: var(--accent-blue); box-shadow: 0 0 0 4px var(--accent-blue-dim); }
 .day-rail__block.is-upcoming::before { border-color: var(--border); }
-
-.day-rail__time {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: var(--text-faint);
-  display: block;
-  margin-bottom: 2px;
-}
-.day-rail__label {
-  font-size: 13.5px;
-  font-weight: 500;
-}
+.day-rail__time { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-faint); display: block; margin-bottom: 2px; }
+.day-rail__label { font-size: 13.5px; font-weight: 500; }
 .day-rail__block.is-now .day-rail__label { color: var(--accent-blue); }
 .day-rail__block.is-done .day-rail__label { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--border); }
 
 /* ============================================================
-   TASK LIST
+   TASK LIST (simple, used inside various small lists)
    ============================================================ */
 .task-list { display: flex; flex-direction: column; gap: 8px; }
-
-.task-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 12px;
-  border-radius: var(--radius-md);
-  background: var(--surface-2);
-  border: 1px solid transparent;
-  transition: border-color 0.12s ease;
-}
+.task-item { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: var(--radius-md); background: var(--surface-2); border: 1px solid transparent; transition: border-color 0.12s ease; }
 .task-item:hover { border-color: var(--border); }
-
-.task-item__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--text-faint);
-  flex-shrink: 0;
-}
+.task-item__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-faint); flex-shrink: 0; }
 .task-item.is-completed .task-item__dot { background: var(--accent-green); }
 .task-item.is-progress .task-item__dot { background: var(--accent-blue); }
 .task-item.is-deferred .task-item__dot { background: var(--accent-amber); }
 .task-item.is-skipped .task-item__dot { background: var(--accent-red); }
 .task-item.is-recovery .task-item__dot { background: var(--accent-violet); }
-
-/* Standalone dot variants — used in the Daily Planner, where the
-   status class sits directly on the dot rather than a parent row. */
 .task-item__dot.is-progress { background: var(--accent-blue); }
 .task-item__dot.is-completed { background: var(--accent-green); }
 .task-item__dot.is-deferred { background: var(--accent-amber); }
 .task-item__dot.is-skipped { background: var(--accent-red); }
 .task-item__dot.is-recovery { background: var(--accent-violet); }
-
 .task-item__body { flex: 1; min-width: 0; }
 .task-item__name { font-size: 13.5px; font-weight: 500; }
 .task-item__meta { font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
 .task-item.is-completed .task-item__name { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--border); }
-
-.task-item__status {
-  font-size: 11px;
-  font-family: var(--font-mono);
-  color: var(--text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  flex-shrink: 0;
-}
+.task-item__status { font-size: 11px; font-family: var(--font-mono); color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.03em; flex-shrink: 0; }
 
 /* ============================================================
-   BAR CHART (weekly progress, pure CSS/JS)
+   BAR CHART
    ============================================================ */
-.bar-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  height: 120px;
-  padding-top: 6px;
-}
-.bar-chart__col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  height: 100%;
-  justify-content: flex-end;
-}
-.bar-chart__track {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
-  background: var(--surface-2);
-  border-radius: 5px;
-  overflow: hidden;
-}
-.bar-chart__fill {
-  width: 100%;
-  background: var(--accent-blue);
-  border-radius: 5px 5px 0 0;
-  transition: height 0.4s ease;
-}
+.bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 120px; padding-top: 6px; }
+.bar-chart__col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+.bar-chart__track { width: 100%; height: 100%; display: flex; align-items: flex-end; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
+.bar-chart__fill { width: 100%; background: var(--accent-blue); border-radius: 5px 5px 0 0; transition: height 0.4s ease; }
 .bar-chart__col.is-today .bar-chart__fill { background: var(--accent-green); }
-.bar-chart__label {
-  font-size: 10.5px;
-  color: var(--text-faint);
-  font-family: var(--font-mono);
-}
+.bar-chart__label { font-size: 10.5px; color: var(--text-faint); font-family: var(--font-mono); }
 
 /* ============================================================
    RECOVERY DASHBOARD CARD
    ============================================================ */
-.recovery-suggestion__text {
-  font-size: 13.5px;
-  color: var(--text-muted);
-  line-height: 1.6;
-}
-.recovery-plan {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.recovery-plan__row {
-  display: flex;
-  gap: 10px;
-  font-size: 13px;
-}
-.recovery-plan__time {
-  font-family: var(--font-mono);
-  color: var(--accent-violet);
-  flex-shrink: 0;
-  width: 64px;
-}
+.recovery-suggestion__text { font-size: 13.5px; color: var(--text-muted); line-height: 1.6; }
+.recovery-plan { display: flex; flex-direction: column; gap: 8px; }
+.recovery-plan__row { display: flex; gap: 10px; font-size: 13px; }
+.recovery-plan__time { font-family: var(--font-mono); color: var(--accent-violet); flex-shrink: 0; width: 64px; }
+.recovery-card__score { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+.recovery-card__score-value { font-family: var(--font-mono); font-size: 26px; font-weight: 600; color: var(--accent-violet); }
+.recovery-card__score-label { font-size: 12.5px; color: var(--text-muted); }
+.recovery-card__meta { font-size: 12.5px; color: var(--text-muted); margin-bottom: 8px; }
+.recovery-card__deferred { font-size: 12px; color: var(--accent-amber); margin-top: 10px; }
 
-.recovery-card__score {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 12px;
+/* ============================================================
+   DAILY PLANNER — task cards
+   ============================================================ */
+.planner-task-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+@media (max-width: 780px) { .planner-task-grid { grid-template-columns: 1fr; } }
+
+.planner-card {
+  background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card); padding: 18px; display: flex; flex-direction: column; gap: 14px; transition: opacity 0.15s ease;
 }
-.recovery-card__score-value {
-  font-family: var(--font-mono);
-  font-size: 26px;
-  font-weight: 600;
-  color: var(--accent-violet);
+.planner-card.is-settled { opacity: 0.72; }
+.planner-card__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.planner-card__title { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.planner-card__icon { font-size: 14px; color: var(--accent-blue); }
+.planner-card__name { font-family: var(--font-display); font-size: 14px; font-weight: 600; }
+.planner-card__status { font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-faint); flex-shrink: 0; }
+
+.mode-selector { display: flex; background: var(--surface-2); border-radius: var(--radius-sm); padding: 3px; gap: 2px; }
+.mode-btn { flex: 1; background: transparent; border: none; color: var(--text-muted); font-size: 11.5px; font-weight: 500; text-transform: capitalize; padding: 6px 8px; border-radius: 6px; transition: background 0.12s ease, color 0.12s ease; }
+.mode-btn:hover:not(:disabled) { color: var(--text); }
+.mode-btn.is-active { background: var(--surface); color: var(--accent-blue); box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.mode-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.planner-card__meta { font-size: 12.5px; color: var(--text-muted); font-family: var(--font-mono); }
+.planner-card__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+
+.action-btn { border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-size: 12.5px; font-weight: 500; padding: 8px 14px; border-radius: var(--radius-sm); transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease; }
+.action-btn:hover { background: var(--surface-hover); }
+.action-btn--primary { background: var(--accent-blue-dim); border-color: transparent; color: var(--accent-blue); }
+.action-btn--green { background: var(--accent-green-dim); border-color: transparent; color: var(--accent-green); }
+.action-btn--amber { background: var(--accent-amber-dim); border-color: transparent; color: var(--accent-amber); }
+.action-btn--ghost { background: transparent; border-color: var(--border); color: var(--text-muted); }
+.action-btn--text { background: transparent; border-color: transparent; color: var(--text-faint); padding: 8px 6px; text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 2px; }
+.action-btn--text:hover { color: var(--text-muted); }
+
+/* ============================================================
+   PLAN PAGES (Learning tracks / Workout) — shared components
+   ============================================================ */
+.grid--plan-upload, .grid--plan-top, .grid--plan-mid, .grid--plan-bottom { grid-template-columns: 1fr; }
+.grid--plan-top { grid-template-columns: 1fr 1.2fr; }
+.grid--plan-bottom { grid-template-columns: 1fr 1fr; }
+@media (max-width: 780px) { .grid--plan-top, .grid--plan-bottom { grid-template-columns: 1fr; } }
+
+.plan-textarea {
+  width: 100%; min-height: 140px; resize: vertical; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-md); color: var(--text); font-family: var(--font-mono); font-size: 13px; line-height: 1.6;
+  padding: 12px 14px; margin-bottom: 12px;
 }
-.recovery-card__score-label {
-  font-size: 12.5px;
-  color: var(--text-muted);
+.plan-textarea::placeholder { color: var(--text-faint); }
+.plan-textarea:focus { outline: none; border-color: var(--accent-blue); }
+.plan-upload__row { display: flex; align-items: center; gap: 12px; }
+.plan-upload__status { font-size: 12.5px; color: var(--text-muted); font-family: var(--font-mono); }
+
+.current-topic__value { font-family: var(--font-display); font-size: 18px; font-weight: 600; }
+.mission__text { font-size: 14px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.6; }
+
+.topic-list { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; }
+.topic-list__item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; border-radius: var(--radius-sm); background: var(--surface-2); font-size: 13px; }
+.topic-list__item.is-done { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--border); }
+.topic-list__item.is-deferred-item { color: var(--accent-amber); }
+.topic-list__week { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); flex-shrink: 0; }
+.topic-list__empty { font-size: 13px; color: var(--text-faint); padding: 9px 2px; }
+
+/* ============================================================
+   COLLAPSIBLE CARDS (<details>)
+   ============================================================ */
+details.card { padding: 0; }
+details.card > *:not(summary) { padding: 0 20px 20px; }
+.card__head--summary { display: flex; align-items: center; justify-content: space-between; padding: 20px; cursor: pointer; list-style: none; margin-bottom: 0; }
+.card__head--summary::-webkit-details-marker { display: none; }
+.card__head--summary h2 { font-family: var(--font-display); font-size: 14.5px; font-weight: 600; }
+details[open] .card__head--summary { padding-bottom: 8px; }
+
+/* ============================================================
+   HERO CARD
+   ============================================================ */
+.card--hero { border-color: var(--accent-blue); box-shadow: 0 0 0 1px var(--accent-blue-dim), var(--shadow-card); }
+.hero-card__task { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+.hero-card__task-body { flex: 1; min-width: 0; }
+.hero-card__icon { font-size: 22px; color: var(--accent-blue); flex-shrink: 0; margin-top: 2px; }
+.hero-card__name { font-family: var(--font-display); font-size: 17px; font-weight: 600; }
+.hero-card__mission { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.hero-card__workout-detail { margin-top: 8px; margin-bottom: 0; }
+.hero-card__done { font-size: 14px; color: var(--accent-green); font-weight: 500; }
+
+/* ============================================================
+   ONBOARDING CHECKLIST
+   ============================================================ */
+.onboarding-list { display: flex; flex-direction: column; gap: 4px; }
+.onboarding-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-md); cursor: pointer; transition: background 0.12s ease; }
+.onboarding-item:hover { background: var(--surface-2); }
+.onboarding-item__check { font-size: 14px; color: var(--text-faint); width: 18px; text-align: center; flex-shrink: 0; }
+.onboarding-item.is-done .onboarding-item__check { color: var(--accent-green); }
+.onboarding-item__label { font-size: 13.5px; }
+.onboarding-item.is-done .onboarding-item__label { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--border); }
+
+/* ============================================================
+   RECOVERY PROMPT
+   ============================================================ */
+.card--recovery-prompt { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; background: var(--accent-violet-dim); border-color: var(--accent-violet); }
+.recovery-prompt__body { display: flex; align-items: center; gap: 12px; }
+.recovery-prompt__icon { font-size: 22px; color: var(--accent-violet); }
+.recovery-prompt__title { font-family: var(--font-display); font-size: 14.5px; font-weight: 600; }
+.recovery-prompt__sub { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+
+/* ============================================================
+   LEARNING HUB — tabs + add-track form
+   ============================================================ */
+.learning-tabs { display: flex; gap: 4px; background: var(--surface-2); border-radius: var(--radius-sm); padding: 4px; margin-bottom: 20px; flex-wrap: wrap; max-width: 100%; }
+.learning-tab { flex: 0 1 auto; background: transparent; border: none; color: var(--text-muted); font-size: 13px; font-weight: 500; padding: 9px 14px; border-radius: 7px; transition: background 0.12s ease, color 0.12s ease; white-space: nowrap; }
+.learning-tab:hover { color: var(--text); }
+.learning-tab.is-active { background: var(--surface); color: var(--accent-blue); box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.learning-tab--add { color: var(--accent-green); border: 1px dashed var(--border); }
+.learning-track { display: none; }
+.learning-track.is-active { display: block; animation: fadeIn 0.18s ease; }
+
+.add-track-form {
+  display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;
+  background: var(--surface-2); padding: 12px; border-radius: var(--radius-md);
 }
-.recovery-card__meta {
-  font-size: 12.5px;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-}
-.recovery-card__deferred {
-  font-size: 12px;
-  color: var(--accent-amber);
-  margin-top: 10px;
-}
+.add-track-form .auth-input { flex: 1; min-width: 180px; margin-bottom: 0; }
+
+.track-manage-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; border-radius: var(--radius-sm); background: var(--surface-2); font-size: 13px; }
+.track-manage-row.is-archived { opacity: 0.6; }
+
+/* ============================================================
+   INSIGHTS
+   ============================================================ */
+.insight-list { display: flex; flex-direction: column; gap: 10px; }
+.insight-list__item { font-size: 13.5px; line-height: 1.6; padding: 12px 14px; background: var(--surface-2); border-radius: var(--radius-md); border-left: 3px solid var(--accent-blue); }
+.insight-list__item strong { color: var(--accent-blue); }
+.insight-list__empty { font-size: 13px; color: var(--text-faint); padding: 12px 2px; }
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+.settings-row { margin-bottom: 10px; }
+.settings-file-label { display: inline-block; cursor: pointer; }
 
 /* ============================================================
    RECOVERY PLANNER PAGE
    ============================================================ */
 .grid--recovery-inputs { grid-template-columns: 1fr 1fr; }
-.grid--recovery-generate,
-.grid--recovery-review { grid-template-columns: 1fr; }
+.grid--recovery-generate, .grid--recovery-review { grid-template-columns: 1fr; }
 .grid--recovery-mid { grid-template-columns: 1.3fr 1fr; }
 .grid--recovery-bottom { grid-template-columns: 1fr 1fr; }
-
 @media (max-width: 780px) {
-  .grid--recovery-inputs,
-  .grid--recovery-mid,
-  .grid--recovery-bottom {
-    grid-template-columns: 1fr;
-  }
+  .grid--recovery-inputs, .grid--recovery-mid, .grid--recovery-bottom { grid-template-columns: 1fr; }
 }
 
 .time-input {
-  width: 100%;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 18px;
-  padding: 12px 14px;
-  color-scheme: dark;
+  width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md);
+  color: var(--text); font-family: var(--font-mono); font-size: 18px; padding: 12px 14px; color-scheme: dark;
 }
 .time-input:focus { outline: none; border-color: var(--accent-blue); }
 
-.energy-selector {
-  display: flex;
-  background: var(--surface-2);
-  border-radius: var(--radius-sm);
-  padding: 4px;
-  gap: 4px;
-}
-.energy-btn {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 500;
-  padding: 10px;
-  border-radius: 7px;
-  transition: background 0.12s ease, color 0.12s ease;
-}
+.energy-selector { display: flex; background: var(--surface-2); border-radius: var(--radius-sm); padding: 4px; gap: 4px; }
+.energy-btn { flex: 1; background: transparent; border: none; color: var(--text-muted); font-size: 13px; font-weight: 500; padding: 10px; border-radius: 7px; transition: background 0.12s ease, color 0.12s ease; }
 .energy-btn:hover { color: var(--text); }
-.energy-btn.is-active {
-  background: var(--surface);
-  color: var(--accent-violet);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-}
+.energy-btn.is-active { background: var(--surface); color: var(--accent-violet); box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
 
-.checkbox-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13.5px;
-  cursor: pointer;
-}
-.checkbox-row input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--accent-violet);
-}
+.checkbox-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; cursor: pointer; }
+.checkbox-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent-violet); }
 
-.recovery-schedule {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.recovery-schedule__row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: var(--radius-md);
-  background: var(--surface-2);
-  flex-wrap: wrap;
-}
-.recovery-schedule__info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 140px;
-}
-.recovery-schedule__time {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--accent-violet);
-}
-.recovery-schedule__name {
-  font-size: 13.5px;
-  font-weight: 500;
-}
-.recovery-schedule__mode {
-  font-size: 11.5px;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-}
+.recovery-schedule { display: flex; flex-direction: column; gap: 10px; }
+.recovery-schedule__row { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius-md); background: var(--surface-2); flex-wrap: wrap; }
+.recovery-schedule__info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 140px; }
+.recovery-schedule__time { font-family: var(--font-mono); font-size: 12px; color: var(--accent-violet); }
+.recovery-schedule__name { font-size: 13.5px; font-weight: 500; }
+.recovery-schedule__mode { font-size: 11.5px; color: var(--text-muted); font-family: var(--font-mono); }
 
-.reality-score {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.reality-score__label {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-muted);
-}
+.reality-score { display: flex; align-items: center; gap: 16px; }
+.reality-score__label { font-size: 14px; font-weight: 500; color: var(--text-muted); }
 
-.topic-list__item.is-deferred-item {
-  color: var(--accent-amber);
-}
-
-.review-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.review-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  background: var(--surface-2);
-}
-.review-row__label {
-  font-size: 13px;
-  font-weight: 500;
-}
-.review-row__select {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-size: 13px;
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-}
+.review-list { display: flex; flex-direction: column; gap: 8px; }
+.review-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--surface-2); }
+.review-row__label { font-size: 13px; font-weight: 500; }
+.review-row__select { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 13px; padding: 8px 10px; border-radius: var(--radius-sm); }
 .review-row__select:focus { outline: none; border-color: var(--accent-blue); }
 
 /* ============================================================
-   QUICK ACTIONS
+   WORKOUT DETAIL — tap-to-expand breakdown
    ============================================================ */
-.quick-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.quick-action {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px;
-  border-radius: var(--radius-md);
-  background: var(--surface-2);
-  border: 1px solid var(--border-soft);
-  color: var(--text);
-  text-align: left;
-  transition: background 0.12s ease, border-color 0.12s ease;
-}
-.quick-action:hover { background: var(--surface-hover); border-color: var(--border); }
-.quick-action__icon { font-size: 15px; color: var(--accent-blue); }
-.quick-action__label { font-size: 12.5px; font-weight: 500; }
-
-/* ============================================================
-   DAILY PLANNER — progress summary
-   ============================================================ */
-.grid--planner-top { grid-template-columns: 1fr; }
-
-.progress-bar {
-  width: 100%;
-  height: 10px;
-  border-radius: 100px;
-  background: var(--surface-2);
-  overflow: hidden;
-  margin-bottom: 18px;
-}
-.progress-bar__fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
-  border-radius: 100px;
-  transition: width 0.35s ease;
-}
-
-.planner-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-.planner-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px 14px;
-  background: var(--surface-2);
-  border-radius: var(--radius-md);
-}
-.planner-stat__label {
-  font-size: 11.5px;
-  color: var(--text-muted);
-}
-.planner-stat__value {
-  font-family: var(--font-mono);
-  font-size: 16px;
-  font-weight: 500;
-}
-
-@media (max-width: 560px) {
-  .planner-stats { grid-template-columns: 1fr; }
-}
-
-/* ============================================================
-   DAILY PLANNER — task grid / cards
-   ============================================================ */
-.planner-task-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-@media (max-width: 780px) {
-  .planner-task-grid { grid-template-columns: 1fr; }
-}
-
-.planner-card {
-  background: var(--surface);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  transition: opacity 0.15s ease;
-}
-.planner-card.is-settled { opacity: 0.72; }
-
-.planner-card__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.planner-card__title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-.planner-card__icon { font-size: 14px; color: var(--accent-blue); }
-.planner-card__name {
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 600;
-}
-.planner-card__status {
-  font-size: 11px;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--text-faint);
-  flex-shrink: 0;
-}
-
-/* Mode selector — segmented control */
-.mode-selector {
-  display: flex;
-  background: var(--surface-2);
-  border-radius: var(--radius-sm);
-  padding: 3px;
-  gap: 2px;
-}
-.mode-btn {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 11.5px;
-  font-weight: 500;
-  text-transform: capitalize;
-  padding: 6px 8px;
-  border-radius: 6px;
-  transition: background 0.12s ease, color 0.12s ease;
-}
-.mode-btn:hover:not(:disabled) { color: var(--text); }
-.mode-btn.is-active {
-  background: var(--surface);
-  color: var(--accent-blue);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-}
-.mode-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.planner-card__meta {
-  font-size: 12.5px;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-}
-
-.planner-card__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: auto;
-}
-
-.action-btn {
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text);
-  font-size: 12.5px;
-  font-weight: 500;
-  padding: 8px 14px;
-  border-radius: var(--radius-sm);
-  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
-}
-.action-btn:hover { background: var(--surface-hover); }
-
-.action-btn--primary {
-  background: var(--accent-blue-dim);
-  border-color: transparent;
-  color: var(--accent-blue);
-}
-.action-btn--green {
-  background: var(--accent-green-dim);
-  border-color: transparent;
-  color: var(--accent-green);
-}
-.action-btn--amber {
-  background: var(--accent-amber-dim);
-  border-color: transparent;
-  color: var(--accent-amber);
-}
-.action-btn--ghost {
-  background: transparent;
-  border-color: var(--border);
-  color: var(--text-muted);
-}
-.action-btn--text {
-  background: transparent;
-  border-color: transparent;
-  color: var(--text-faint);
-  padding: 8px 6px;
-  text-decoration: underline;
-  text-decoration-color: var(--border);
-  text-underline-offset: 2px;
-}
-.action-btn--text:hover { color: var(--text-muted); }
-
-/* ============================================================
-   PLAN PAGES (Python / English / Workout) — shared components
-   ============================================================ */
-.grid--plan-upload,
-.grid--plan-top,
-.grid--plan-mid,
-.grid--plan-bottom {
-  grid-template-columns: 1fr;
-}
-.grid--plan-top { grid-template-columns: 1fr 1.2fr; }
-.grid--plan-bottom { grid-template-columns: 1fr 1fr; }
-
-@media (max-width: 780px) {
-  .grid--plan-top, .grid--plan-bottom {
-    grid-template-columns: 1fr;
-  }
-}
-
-.plan-textarea {
-  width: 100%;
-  min-height: 140px;
-  resize: vertical;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 1.6;
-  padding: 12px 14px;
-  margin-bottom: 12px;
-}
-.plan-textarea::placeholder { color: var(--text-faint); }
-.plan-textarea:focus { outline: none; border-color: var(--accent-blue); }
-
-.plan-upload__row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.plan-upload__status {
-  font-size: 12.5px;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-}
-
-.current-topic__value {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.mission__text {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-bottom: 14px;
-  line-height: 1.6;
-}
-
-.topic-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 280px;
-  overflow-y: auto;
-}
-.topic-list__item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  font-size: 13px;
-}
-.topic-list__item.is-done {
-  color: var(--text-muted);
-  text-decoration: line-through;
-  text-decoration-color: var(--border);
-}
-.topic-list__week {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-faint);
-  flex-shrink: 0;
-}
-.topic-list__empty {
-  font-size: 13px;
-  color: var(--text-faint);
-  padding: 9px 2px;
-}
-
-/* ============================================================
-   AUTH OVERLAY — local device lock
-   ============================================================ */
-.auth-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: var(--bg);
-  display: flex; /* toggled to 'none' by auth.js once unlocked */
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  padding-top: calc(24px + env(safe-area-inset-top));
-  padding-bottom: calc(24px + env(safe-area-inset-bottom));
-}
-
-.auth-card {
-  width: 100%;
-  max-width: 380px;
-  background: var(--surface);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  padding: 28px 24px;
-}
-
-.auth-brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--text-muted);
-  margin-bottom: 20px;
-}
-
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.auth-title {
-  font-family: var(--font-display);
-  font-size: 19px;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.auth-sub {
-  font-size: 12.5px;
-  color: var(--text-muted);
-  line-height: 1.6;
-  margin-bottom: 18px;
-}
-
-.auth-label {
-  font-size: 11.5px;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-  margin-top: 10px;
-}
-
-.auth-input {
-  width: 100%;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 16px; /* 16px avoids iOS Safari auto-zoom on focus */
-  padding: 12px 14px;
-  letter-spacing: 0.05em;
-}
-.auth-input:focus { outline: none; border-color: var(--accent-blue); }
-
-.auth-error {
-  font-size: 12px;
-  color: var(--accent-red);
-  min-height: 16px;
-  margin-top: 10px;
-}
-
-.auth-submit {
-  width: 100%;
-  text-align: center;
-  margin-top: 8px;
-  min-height: 48px;
-}
-
-.auth-forgot {
-  width: 100%;
-  text-align: center;
-  margin-top: 6px;
-}
-
-.topbar__lock {
-  background: var(--surface-2);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-sm);
-  font-size: 15px;
-  padding: 8px 12px;
-  min-height: 40px;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  align-self: flex-start;
-}
-.topbar__lock:hover { background: var(--surface-hover); color: var(--text); }
-
-/* ============================================================
-   COLLAPSIBLE CARDS (<details> used for Day Rail / Weekly Progress
-   — demoted to secondary, tap-to-expand content on Today)
-   ============================================================ */
-details.card { padding: 0; }
-details.card > *:not(summary) { padding: 0 20px 20px; }
-.card__head--summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px;
-  cursor: pointer;
-  list-style: none;
-  margin-bottom: 0;
-}
-.card__head--summary::-webkit-details-marker { display: none; }
-.card__head--summary h2 {
-  font-family: var(--font-display);
-  font-size: 14.5px;
-  font-weight: 600;
-}
-details[open] .card__head--summary { padding-bottom: 8px; }
-
-/* ============================================================
-   HERO CARD — "What's Next" on Today
-   ============================================================ */
-.card--hero {
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 1px var(--accent-blue-dim), var(--shadow-card);
-}
-.hero-card__task {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  margin-bottom: 16px;
-}
-.hero-card__task-body {
-  flex: 1;
-  min-width: 0;
-}
-.hero-card__icon {
-  font-size: 22px;
-  color: var(--accent-blue);
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-.hero-card__name {
-  font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 600;
-}
-.hero-card__mission {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-.hero-card__workout-detail {
-  margin-top: 8px;
-  margin-bottom: 0;
-}
-.hero-card__done {
-  font-size: 14px;
-  color: var(--accent-green);
-  font-weight: 500;
-}
-
-/* ============================================================
-   ONBOARDING CHECKLIST
-   ============================================================ */
-.onboarding-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.onboarding-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: background 0.12s ease;
-}
-.onboarding-item:hover { background: var(--surface-2); }
-.onboarding-item__check {
-  font-size: 14px;
-  color: var(--text-faint);
-  width: 18px;
-  text-align: center;
-  flex-shrink: 0;
-}
-.onboarding-item.is-done .onboarding-item__check { color: var(--accent-green); }
-.onboarding-item__label { font-size: 13.5px; }
-.onboarding-item.is-done .onboarding-item__label {
-  color: var(--text-muted);
-  text-decoration: line-through;
-  text-decoration-color: var(--border);
-}
-
-/* ============================================================
-   RECOVERY PROMPT — conditional banner, only shown once
-   something is actually pending
-   ============================================================ */
-.card--recovery-prompt {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  background: var(--accent-violet-dim);
-  border-color: var(--accent-violet);
-}
-.recovery-prompt__body {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.recovery-prompt__icon {
-  font-size: 22px;
-  color: var(--accent-violet);
-}
-.recovery-prompt__title {
-  font-family: var(--font-display);
-  font-size: 14.5px;
-  font-weight: 600;
-}
-.recovery-prompt__sub {
-  font-size: 12.5px;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-/* ============================================================
-   LEARNING HUB — sub-tabs between tracks
-   ============================================================ */
-.learning-tabs {
-  display: flex;
-  gap: 4px;
-  background: var(--surface-2);
-  border-radius: var(--radius-sm);
-  padding: 4px;
-  margin-bottom: 20px;
-  max-width: 320px;
-}
-.learning-tab {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 500;
-  padding: 9px 12px;
-  border-radius: 7px;
-  transition: background 0.12s ease, color 0.12s ease;
-}
-.learning-tab:hover { color: var(--text); }
-.learning-tab.is-active {
-  background: var(--surface);
-  color: var(--accent-blue);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-}
-.learning-track { display: none; }
-.learning-track.is-active { display: block; animation: fadeIn 0.18s ease; }
-
-/* ============================================================
-   INSIGHTS PAGE
-   ============================================================ */
-.insight-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.insight-list__item {
-  font-size: 13.5px;
-  line-height: 1.6;
-  padding: 12px 14px;
-  background: var(--surface-2);
-  border-radius: var(--radius-md);
-  border-left: 3px solid var(--accent-blue);
-}
-.insight-list__item strong { color: var(--accent-blue); }
-.insight-list__empty {
-  font-size: 13px;
-  color: var(--text-faint);
-  padding: 12px 2px;
-}
-
-/* ============================================================
-   SETTINGS PAGE
-   ============================================================ */
-.settings-row {
-  margin-bottom: 10px;
-}
-.settings-file-label {
-  display: inline-block;
-  cursor: pointer;
-}
-
-/* ============================================================
-   WORKOUT DETAIL — tap-to-expand "Monday – Upper Body Strength"
-   bar revealing the full muscle-group/exercise breakdown
-   ============================================================ */
-.workout-detail {
-  margin-bottom: 14px;
-}
+.workout-detail { margin-bottom: 14px; }
 .workout-detail__summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 12px 14px;
-  background: var(--surface-2);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  list-style: none;
-  font-size: 14px;
-  font-weight: 500;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px;
+  background: var(--surface-2); border-radius: var(--radius-md); cursor: pointer; list-style: none; font-size: 14px; font-weight: 500;
 }
 .workout-detail__summary::-webkit-details-marker { display: none; }
-.workout-detail__chevron {
-  color: var(--text-faint);
-  transition: transform 0.15s ease;
-  flex-shrink: 0;
-}
+.workout-detail__chevron { color: var(--text-faint); transition: transform 0.15s ease; flex-shrink: 0; }
 .workout-detail[open] .workout-detail__chevron { transform: rotate(180deg); }
-.workout-detail[open] .workout-detail__summary {
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-}
-
-.workout-detail__body {
-  padding: 14px;
-  background: var(--surface);
-  border: 1px solid var(--border-soft);
-  border-top: none;
-  border-radius: 0 0 var(--radius-md) var(--radius-md);
-}
+.workout-detail[open] .workout-detail__summary { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+.workout-detail__body { padding: 14px; background: var(--surface); border: 1px solid var(--border-soft); border-top: none; border-radius: 0 0 var(--radius-md) var(--radius-md); }
 .workout-detail__group { margin-bottom: 14px; }
 .workout-detail__group:last-child { margin-bottom: 0; }
-.workout-detail__group-title {
-  font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--accent-blue);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 6px;
-}
-.workout-detail__exercises {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.workout-detail__exercises li {
-  font-size: 13px;
-  color: var(--text-muted);
-  padding-left: 2px;
-}
-.workout-detail__empty {
-  font-size: 12.5px;
-  color: var(--text-faint);
-}
+.workout-detail__group-title { font-family: var(--font-display); font-size: 12px; font-weight: 600; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+.workout-detail__exercises { display: flex; flex-direction: column; gap: 4px; }
+.workout-detail__exercises li { font-size: 13px; color: var(--text-muted); padding-left: 2px; }
+.workout-detail__empty { font-size: 12.5px; color: var(--text-faint); }
 
 /* ============================================================
-   PLACEHOLDER CARD (future phases)
+   AUTH OVERLAY
    ============================================================ */
-.placeholder-card {
-  background: var(--surface);
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-lg);
-  padding: 48px 32px;
-  text-align: center;
-  max-width: 480px;
-  margin: 40px auto;
+.auth-overlay {
+  position: fixed; inset: 0; z-index: 9999; background: var(--bg); display: flex; align-items: center;
+  justify-content: center; padding: 24px; padding-top: calc(24px + env(safe-area-inset-top)); padding-bottom: calc(24px + env(safe-area-inset-bottom));
 }
-.placeholder-card__icon {
-  font-size: 26px;
-  color: var(--accent-blue);
-  display: block;
-  margin-bottom: 14px;
-}
-.placeholder-card h2 {
-  font-family: var(--font-display);
-  font-size: 17px;
-  margin-bottom: 8px;
-}
-.placeholder-card p {
-  color: var(--text-muted);
-  font-size: 13.5px;
-  line-height: 1.6;
-}
+.auth-card { width: 100%; max-width: 380px; background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 28px 24px; }
+.auth-brand { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 600; font-size: 15px; color: var(--text-muted); margin-bottom: 20px; }
+.auth-form { display: flex; flex-direction: column; gap: 4px; }
+.auth-title { font-family: var(--font-display); font-size: 19px; font-weight: 600; margin-bottom: 6px; }
+.auth-sub { font-size: 12.5px; color: var(--text-muted); line-height: 1.6; margin-bottom: 18px; }
+.auth-label { font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; margin-top: 10px; }
+.auth-input { width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text); font-family: var(--font-mono); font-size: 16px; padding: 12px 14px; letter-spacing: 0.05em; }
+.auth-input:focus { outline: none; border-color: var(--accent-blue); }
+.auth-error { font-size: 12px; color: var(--accent-red); min-height: 16px; margin-top: 10px; }
+.auth-submit { width: 100%; text-align: center; margin-top: 8px; min-height: 48px; }
+.auth-forgot { width: 100%; text-align: center; margin-top: 6px; }
 
 /* ============================================================
-   RESPONSIVE — MOBILE (bottom tab bar)
+   PLACEHOLDER CARD
+   ============================================================ */
+.placeholder-card { background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius-lg); padding: 48px 32px; text-align: center; max-width: 480px; margin: 40px auto; }
+.placeholder-card__icon { font-size: 26px; color: var(--accent-blue); display: block; margin-bottom: 14px; }
+.placeholder-card h2 { font-family: var(--font-display); font-size: 17px; margin-bottom: 8px; }
+.placeholder-card p { color: var(--text-muted); font-size: 13.5px; line-height: 1.6; }
+
+/* ============================================================
+   RESPONSIVE — MOBILE
    ============================================================ */
 @media (max-width: 768px) {
-  .app-shell {
-    grid-template-columns: 1fr;
-  }
+  .app-shell { grid-template-columns: 1fr; }
 
   .nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    top: auto;
-    height: auto;
-    width: 100%;
-    flex-direction: row;
-    align-items: center;
-    padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
-    border-right: none;
-    border-top: 1px solid var(--border-soft);
-    z-index: 50;
+    position: fixed; bottom: 0; left: 0; right: 0; top: auto; height: auto; width: 100%;
+    flex-direction: row; align-items: center; padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+    border-right: none; border-top: 1px solid var(--border-soft); z-index: 50;
   }
   .nav__brand, .nav__footer { display: none; }
-  .nav__list {
-    flex-direction: row;
-    justify-content: space-between;
-    width: 100%;
-    overflow-x: auto;
-    flex: none;
-  }
-  .nav__item {
-    flex-direction: column;
-    gap: 3px;
-    font-size: 10px;
-    padding: 6px 8px;
-    min-width: 52px;
-  }
+  .nav__list { flex-direction: row; justify-content: space-between; width: 100%; overflow-x: auto; flex: none; }
+  .nav__item { flex-direction: column; gap: 3px; font-size: 10px; padding: 6px 8px; min-width: 52px; min-height: 48px; justify-content: center; }
   .nav__label { font-size: 9.5px; }
 
-  .main {
-    padding: 20px 16px calc(90px + env(safe-area-inset-bottom));
-  }
-
+  .main { padding: 20px 16px calc(90px + env(safe-area-inset-bottom)); }
   .topbar__clock { text-align: left; }
-
   .status-ring-row { flex-wrap: wrap; }
-}
 
-@media (max-width: 768px) {
   .action-btn { padding: 11px 16px; min-height: 44px; }
   .mode-btn, .energy-btn { min-height: 40px; }
-  .nav__item { min-height: 48px; justify-content: center; }
   .time-input { min-height: 48px; }
   .checkbox-row input[type="checkbox"] { width: 20px; height: 20px; }
-  .plan-textarea { font-size: 16px; } /* prevents iOS Safari auto-zoom on focus */
+  .plan-textarea { font-size: 16px; }
 }
 
 @media (max-width: 480px) {
-  .quick-actions { grid-template-columns: 1fr; }
   .topbar__title { font-size: 20px; }
 }
 
@@ -1467,14 +522,11 @@ details[open] .card__head--summary { padding-bottom: 8px; }
 </head>
 <body>
 
-  <!-- AUTH OVERLAY — visible by default so there's never a flash of
-       unlocked content; auth.js hides it once the correct PIN is
-       entered (or immediately, if already unlocked this session). -->
+  <!-- AUTH OVERLAY -->
   <div id="authOverlay" class="auth-overlay">
     <div class="auth-card">
       <div class="auth-brand"><span class="nav__brand-mark">◈</span> Adaptive OS</div>
 
-      <!-- First run: choose a name + PIN -->
       <form id="authSetupForm" class="auth-form">
         <h2 class="auth-title">Set up your lock</h2>
         <p class="auth-sub">This protects your data with a local PIN. There's no account or server — everything stays on this device.</p>
@@ -1492,7 +544,6 @@ details[open] .card__head--summary { padding-bottom: 8px; }
         <button type="submit" class="action-btn action-btn--primary auth-submit">Lock In &amp; Start</button>
       </form>
 
-      <!-- Returning: enter PIN -->
       <form id="authUnlockForm" class="auth-form" style="display:none;">
         <h2 class="auth-title" id="authUnlockGreeting">Welcome back</h2>
         <p class="auth-sub">Enter your PIN to unlock.</p>
@@ -1508,7 +559,6 @@ details[open] .card__head--summary { padding-bottom: 8px; }
 
   <div class="app-shell">
 
-    <!-- Sidebar (desktop) / Bottom bar (mobile) -->
     <nav class="nav" id="mainNav">
       <div class="nav__brand">
         <span class="nav__brand-mark">◈</span>
@@ -1532,7 +582,6 @@ details[open] .card__head--summary { padding-bottom: 8px; }
       </div>
     </nav>
 
-    <!-- Main content -->
     <main class="main">
 
       <header class="topbar">
@@ -1547,23 +596,17 @@ details[open] .card__head--summary { padding-bottom: 8px; }
         <button class="topbar__lock" id="topbarLockBtn" title="Lock app">🔒</button>
       </header>
 
-      <!-- ============================================================
-           TODAY — merges the old Dashboard + Daily Planner into one
-           screen: what's next, am I on track, what's recoverable,
-           then the full task list and momentum detail below.
-           ============================================================ -->
+      <!-- TODAY -->
       <section class="view is-active" data-view="today" id="view-today">
 
-        <!-- Onboarding checklist — hidden once all 4 steps are done -->
         <div class="card card--onboarding" id="onboardingChecklist" style="display:none;">
           <div class="card__head">
             <h2>Get Started</h2>
             <span class="card__hint">4 steps</span>
           </div>
-          <ul class="onboarding-list" id="onboardingList"><!-- populated by JS --></ul>
+          <ul class="onboarding-list" id="onboardingList"></ul>
         </div>
 
-        <!-- Recovery Prompt — only appears once there's something to recover -->
         <div class="card card--recovery-prompt" id="recoveryPromptBanner" style="display:none;">
           <div class="recovery-prompt__body">
             <span class="recovery-prompt__icon">◐</span>
@@ -1575,18 +618,15 @@ details[open] .card__head--summary { padding-bottom: 8px; }
           <button class="action-btn action-btn--primary" id="recoveryPromptBtn">Open Recovery →</button>
         </div>
 
-        <!-- Hero: what's next -->
         <div class="card card--hero" id="heroCard">
           <div class="card__head">
             <h2>What's Next</h2>
             <span class="card__hint" id="heroCardHint">—</span>
           </div>
-          <div class="hero-card__body" id="heroCardBody"><!-- populated by today.js --></div>
+          <div class="hero-card__body" id="heroCardBody"></div>
         </div>
 
         <div class="grid grid--top">
-
-          <!-- Current status -->
           <div class="card card--status">
             <div class="card__head">
               <h2>Status</h2>
@@ -1609,19 +649,15 @@ details[open] .card__head--summary { padding-bottom: 8px; }
             </div>
           </div>
 
-          <!-- Day rail (signature element) — collapsed by default, it's
-               configuration-flavored, not decision-flavored -->
           <details class="card card--rail">
             <summary class="card__head card__head--summary">
               <h2>Morning Schedule</h2>
               <span class="card__hint">Tap to expand</span>
             </summary>
-            <div class="day-rail" id="dayRail"><!-- populated by JS --></div>
+            <div class="day-rail" id="dayRail"></div>
           </details>
-
         </div>
 
-        <!-- Full task list — the detail view, always available -->
         <div class="card card--tasks">
           <div class="card__head">
             <h2>Today's Tasks</h2>
@@ -1644,189 +680,45 @@ details[open] .card__head--summary { padding-bottom: 8px; }
               <span class="planner-stat__value" id="plannerDeferredCount">0</span>
             </div>
           </div>
-          <div class="planner-task-grid" id="plannerTaskGrid"><!-- populated by JS --></div>
+          <div class="planner-task-grid" id="plannerTaskGrid"></div>
         </div>
 
         <div class="grid grid--bottom">
-
-          <!-- Weekly progress — collapsed by default, it's reflective -->
           <details class="card card--weekly">
             <summary class="card__head card__head--summary">
               <h2>Weekly Progress</h2>
               <span class="card__hint" id="weeklyAvg">0% avg</span>
             </summary>
-            <div class="bar-chart" id="weeklyChart"><!-- populated by JS --></div>
+            <div class="bar-chart" id="weeklyChart"></div>
           </details>
 
-          <!-- Recovery card -->
           <div class="card card--recovery">
             <div class="card__head">
               <h2>Recovery</h2>
               <span class="card__hint" id="recoveryCardHint">Adaptive</span>
             </div>
-            <div id="recoveryCard" class="recovery-card"><!-- populated by JS --></div>
+            <div id="recoveryCard" class="recovery-card"></div>
           </div>
-
         </div>
 
       </section>
 
-      <!-- ============================================================
-           LEARNING HUB — Python and English under one destination,
-           switched by an inner tab bar instead of two separate nav
-           items. (Track registry generalization is a deferred,
-           larger architecture change — see the strategy doc.)
-           ============================================================ -->
+      <!-- LEARNING HUB - dynamically populated from the track registry -->
       <section class="view" data-view="learning" id="view-learning">
 
-        <div class="learning-tabs" id="learningTabs">
-          <button class="learning-tab is-active" data-track="python">λ Python</button>
-          <button class="learning-tab" data-track="english">✎ English</button>
+        <div class="learning-tabs" id="learningTabs"></div>
+
+        <div class="add-track-form" id="addTrackForm" style="display:none;">
+          <input type="text" id="addTrackInput" class="auth-input" placeholder="Track name, e.g. AI Fundamentals" maxlength="40" />
+          <button class="action-btn action-btn--primary" id="addTrackConfirmBtn">Add</button>
+          <button class="action-btn action-btn--text" id="addTrackCancelBtn">Cancel</button>
         </div>
 
-        <!-- PYTHON TRACK -->
-        <div class="learning-track is-active" data-track="python" id="track-python">
-
-          <div class="grid grid--plan-upload">
-            <div class="card card--plan-upload">
-              <div class="card__head">
-                <h2>Upload Plan</h2>
-                <span class="card__hint">Paste ChatGPT output</span>
-              </div>
-              <textarea class="plan-textarea" id="pythonPlanInput" placeholder="Week 1&#10;Variables&#10;Data Types&#10;Input Output&#10;Operators&#10;Conditionals&#10;Loops&#10;Functions"></textarea>
-              <div class="plan-upload__row">
-                <button class="action-btn action-btn--primary" id="pythonSaveBtn">Save Plan</button>
-                <span class="plan-upload__status" id="pythonSaveStatus"></span>
-              </div>
-            </div>
-          </div>
-
-          <div class="grid grid--plan-top">
-            <div class="card">
-              <div class="card__head">
-                <h2>Current Topic</h2>
-                <span class="card__hint" id="pythonWeekHint">—</span>
-              </div>
-              <p class="current-topic__value" id="pythonCurrentTopic">Upload a plan to get started.</p>
-            </div>
-
-            <div class="card">
-              <div class="card__head">
-                <h2>Today's Mission</h2>
-                <span class="card__hint">Adaptive</span>
-              </div>
-              <p class="mission__text" id="pythonTodayMission">—</p>
-              <div class="planner-card__actions" id="pythonMissionActions"></div>
-            </div>
-          </div>
-
-          <div class="grid grid--plan-mid">
-            <div class="card">
-              <div class="card__head">
-                <h2>Progress</h2>
-                <span class="card__hint" id="pythonProgressPct">0%</span>
-              </div>
-              <div class="progress-bar"><div class="progress-bar__fill" id="pythonProgressFill" style="width:0%"></div></div>
-            </div>
-          </div>
-
-          <div class="grid grid--plan-bottom">
-            <div class="card">
-              <div class="card__head">
-                <h2>Completed Topics</h2>
-                <span class="card__hint" id="pythonCompletedCount">0</span>
-              </div>
-              <ul class="topic-list" id="pythonCompletedList">
-                <li class="topic-list__empty">Nothing completed yet.</li>
-              </ul>
-            </div>
-
-            <div class="card">
-              <div class="card__head">
-                <h2>Remaining Topics</h2>
-                <span class="card__hint" id="pythonRemainingCount">0</span>
-              </div>
-              <ul class="topic-list" id="pythonRemainingList">
-                <li class="topic-list__empty">Upload a plan to see topics.</li>
-              </ul>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- ENGLISH TRACK -->
-        <div class="learning-track" data-track="english" id="track-english">
-
-          <div class="grid grid--plan-upload">
-            <div class="card card--plan-upload">
-              <div class="card__head">
-                <h2>Upload Plan</h2>
-                <span class="card__hint">Paste ChatGPT output</span>
-              </div>
-              <textarea class="plan-textarea" id="englishPlanInput" placeholder="Week 1&#10;Vocabulary Building&#10;Listening Practice&#10;Speaking Practice&#10;Grammar Basics&#10;Reading Practice"></textarea>
-              <div class="plan-upload__row">
-                <button class="action-btn action-btn--primary" id="englishSaveBtn">Save Plan</button>
-                <span class="plan-upload__status" id="englishSaveStatus"></span>
-              </div>
-            </div>
-          </div>
-
-          <div class="grid grid--plan-top">
-            <div class="card">
-              <div class="card__head">
-                <h2>Current Topic</h2>
-                <span class="card__hint" id="englishWeekHint">—</span>
-              </div>
-              <p class="current-topic__value" id="englishCurrentTopic">Upload a plan to get started.</p>
-            </div>
-
-            <div class="card">
-              <div class="card__head">
-                <h2>Today's Mission</h2>
-                <span class="card__hint">Adaptive</span>
-              </div>
-              <p class="mission__text" id="englishTodayMission">—</p>
-              <div class="planner-card__actions" id="englishMissionActions"></div>
-            </div>
-          </div>
-
-          <div class="grid grid--plan-mid">
-            <div class="card">
-              <div class="card__head">
-                <h2>Progress</h2>
-                <span class="card__hint" id="englishProgressPct">0%</span>
-              </div>
-              <div class="progress-bar"><div class="progress-bar__fill" id="englishProgressFill" style="width:0%"></div></div>
-            </div>
-          </div>
-
-          <div class="grid grid--plan-bottom">
-            <div class="card">
-              <div class="card__head">
-                <h2>Completed Topics</h2>
-                <span class="card__hint" id="englishCompletedCount">0</span>
-              </div>
-              <ul class="topic-list" id="englishCompletedList">
-                <li class="topic-list__empty">Nothing completed yet.</li>
-              </ul>
-            </div>
-
-            <div class="card">
-              <div class="card__head">
-                <h2>Remaining Topics</h2>
-                <span class="card__hint" id="englishRemainingCount">0</span>
-              </div>
-              <ul class="topic-list" id="englishRemainingList">
-                <li class="topic-list__empty">Upload a plan to see topics.</li>
-              </ul>
-            </div>
-          </div>
-
-        </div>
+        <div id="learningTracksContainer"></div>
 
       </section>
 
-      <!-- FITNESS (formerly Workout Manager) -->
+      <!-- FITNESS -->
       <section class="view" data-view="fitness" id="view-fitness">
 
         <div class="grid grid--plan-upload">
@@ -1854,7 +746,7 @@ details[open] .card__head--summary { padding-bottom: 8px; }
                 <span id="workoutTodayLabel">Upload a plan to get started.</span>
                 <span class="workout-detail__chevron">▾</span>
               </summary>
-              <div class="workout-detail__body" id="workoutDetailBody"><!-- populated by JS --></div>
+              <div class="workout-detail__body" id="workoutDetailBody"></div>
             </details>
             <div class="planner-card__actions" id="workoutMissionActions"></div>
           </div>
@@ -1896,7 +788,7 @@ details[open] .card__head--summary { padding-bottom: 8px; }
 
       </section>
 
-      <!-- RECOVERY PLANNER -->
+      <!-- RECOVERY -->
       <section class="view" data-view="recovery" id="view-recovery">
 
         <div class="grid grid--recovery-inputs">
@@ -2013,11 +905,7 @@ details[open] .card__head--summary { padding-bottom: 8px; }
 
       </section>
 
-      <!-- ============================================================
-           INSIGHTS (formerly the empty Analytics stub) — plain-English
-           sentences with a number in them, backed by data already
-           being collected elsewhere in the app.
-           ============================================================ -->
+      <!-- INSIGHTS -->
       <section class="view" data-view="insights" id="view-insights">
 
         <div class="card">
@@ -2047,19 +935,12 @@ details[open] .card__head--summary { padding-bottom: 8px; }
             <h2>What the app has noticed</h2>
             <span class="card__hint">Updated live</span>
           </div>
-          <ul class="insight-list" id="insightSentences">
-            <!-- populated by JS: consistency trend, learning velocity,
-                 workout adherence, peak productivity window, missed-task
-                 causes — each a plain sentence with a number in it -->
-          </ul>
+          <ul class="insight-list" id="insightSentences"></ul>
         </div>
 
       </section>
 
-      <!-- ============================================================
-           SETTINGS — data export/import, PIN management, and (later)
-           plan management shortcuts.
-           ============================================================ -->
+      <!-- SETTINGS -->
       <section class="view" data-view="settings" id="view-settings">
 
         <div class="card">
@@ -2094,6 +975,16 @@ details[open] .card__head--summary { padding-bottom: 8px; }
           <div class="settings-row">
             <button class="action-btn action-btn--primary" id="settingsForceRefreshBtn">Get Latest Version</button>
           </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head">
+            <h2>Manage Tracks</h2>
+            <span class="card__hint">Learning Hub</span>
+          </div>
+          <ul class="topic-list" id="settingsTrackList">
+            <li class="topic-list__empty">No tracks yet.</li>
+          </ul>
         </div>
 
         <div class="card">
