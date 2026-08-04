@@ -1,24 +1,16 @@
 /**
  * service-worker.js
  * ------------------------------------------------------------
- * Flat-deployment version — this project has been consolidated
- * into 4 root-level files (index.html, app.bundle.js,
- * manifest.json, service-worker.js) specifically so it can be
- * uploaded to GitHub Pages via a single multi-file picker, with
- * no folders and no binary images to upload (icons are inlined
- * as base64 data URIs in index.html and manifest.json instead).
+ * Caches the entire app shell on install so the app works fully
+ * offline after the first successful load. Only activates when
+ * served over HTTPS (or http://localhost) — browsers refuse
+ * service workers on file:// pages, by design.
  *
- * Precaches the whole app shell on install so it works fully
- * offline after the first load. Only activates over HTTPS (or
- * http://localhost) — browsers refuse service workers on file://
- * pages by design.
- *
- * Bump CACHE_NAME whenever any of these files change, so
- * returning visitors get the new version instead of a stale cache.
+ * Bump CACHE_NAME whenever any cached file changes.
  * ------------------------------------------------------------
  */
 
-const CACHE_NAME = 'adaptive-os-v6';
+const CACHE_NAME = 'adaptive-os-v7';
 
 const APP_SHELL = [
   './',
